@@ -5,6 +5,7 @@
 * Lazy Relationships
 * Fully Featured Indexes
 * Dirty Updating (only send changes to db)
+* Full Test Suite
 * Exposes default MongoDB cursors 
 * Widget System for Fields
 * Large Collection of Default Field Types

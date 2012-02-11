@@ -15,10 +15,10 @@ class Human(orm.Document):
     _db = "test"
     _collection = "humans"
     human_id = field.AutoIncrement(collection="human")
-    name = field.Char(required=True, min=2, max=25)
+    name = field.Char(required=True, min=2, max=25, widget=orm.Widget)
     age = field.Integer(min=0, max=3000)
     height = field.Float(min=1, max=100000)
-    weight = field.Float(min=1, max=30000)
+    weight = field.Float(min=1)
     jobs = orm.Relationship(type=Job)
     genitalia = field.Char()
 
@@ -42,5 +42,11 @@ class Scion(Car):
     model = field.Char(default="xA")
     year = field.Date(default=datetime.datetime(2007, 1, 1))
     silly_date = field.TimeStamp()
+
+class Rodeo(Car):
+    tires = orm.Relationship(type=int)
+
+class BadHuman(Human):
+    unique = field.Integer()
 
 Human.cars = orm.Lazy(type=Car, key='owner')

@@ -69,7 +69,7 @@ class Field(object):
         self._dirty = self._value if not dirty else dirty
         self._value = val
     
-    def clean(self, val, doc=None): pass
+    def clean(self, val, doc=None): return val
     
     def _json(self):
         return self._value
@@ -89,7 +89,7 @@ class Field(object):
         else: self._clean(val, doc=doc)
     
     def render(self, *args, **kwargs):
-        if self._widget: return self._widget.render(*args, **kwargs)
+        if self._widget: return self._widget(field=self).render(*args, **kwargs)
         return self._value
 
 class Lazy(object):
@@ -151,8 +151,8 @@ class Relationship(list):
                 if obj._inited: ret.update(obj._save(namespace=ns))
                 else: ret.update({ns:obj._json()})
             except Exception as e:
-                print e
                 ret[ns] = obj
+                print ret
         return ret
     
     def _errors(self, namespace):
@@ -167,9 +167,12 @@ class Relationship(list):
            
     def _map(self, val, init=False, doc=None):
         for item in val:
-            obj = self._type()
-            obj._map(item, init=init, doc=None)
-            self.append(obj)
+            try:
+                obj = self._type()
+                obj._map(item, init=init, doc=None)
+                self.append(obj)
+            except:
+                self.append(item)
 
     def _json(self):
         ret = []
@@ -227,8 +230,7 @@ class base(object):
             obj = object.__getattribute__(self, key)
             if isinstance(obj, Field): return obj._value
             else: return obj
-        except Exception as e: pass
-        return None
+        except Exception as e: raise e
     
     @classmethod
     def _getbases(cls):
@@ -267,7 +269,6 @@ class base(object):
 
     def _json(self):
         obj = {}
-        self._save()
         for k,v in self.__dict__.iteritems():
             try:
                 if not isinstance(v, Lazy): 
@@ -341,23 +342,22 @@ class Document(base):
     
     @classmethod
     def find_one(cls, *args, **kwargs):
-        if not kwargs.get("as_dict"): kwargs['as_class'] = cls
-        kwargs['as_class'] = cls
+        if not kwargs.get("as_dict", None): kwargs['as_class'] = cls
         return cls._connection().find_one(*args, **kwargs)    
     
     @classmethod
     def __remove__(cls, *args, **kwargs):
         cls._connection().remove(*args, **kwargs)
     
+    @classmethod
     def __update__(cls, *args, **kwargs):
         cls._connection().update(*args, **kwargs)    
 
     def remove(self):
         self.__class__.__remove__({"_id":self._id})
     
-    def update(self, *args, **kwargs):
-        if len(args): args[0].update({"_id":self._id})
-        self.__class__.__update__(*args, **kwargs)
+    def update(self, update, **kwargs):
+        self.__class__.__update__({"_id":self._id}, update, **kwargs)
 
     def save(self):
         errors = self._errors()
@@ -365,18 +365,27 @@ class Document(base):
             self.logger.error(errors) 
             raise DocumentException(errors)
         if not self._id:
-            self.__created = datetime.datetime.utcnow()
-            self.__modified = datetime.datetime.utcnow()
-            self.__active = True
+            self._save()
+            self.__created__ = datetime.datetime.utcnow()
+            self.__modified__ = datetime.datetime.utcnow()
+            self.__active__ = True
             obj = self._json()
-            obj['__created__'] = self.__created
-            obj['__modified__']= self.__modified
-            obj['__active__'] = self.__active
-            self._id = self._coll.insert(obj, safe=True)
+            obj['__created__'] = self.__created__
+            obj['__modified__']= self.__modified__
+            obj['__active__'] = self.__active__
+            try:
+                self._id = self._coll.insert(obj, safe=True)
+            except Exception as e:
+                self.logger.exception(e) 
+                return False
+
+                
         else:
             obj = self._save()
-            self.__modified = datetime.datetime.utcnow()
-            obj['__modified__'] = self.__modified
+            self.__modified__ = datetime.datetime.utcnow()
+            obj['__modified__'] = self.__modified__
             up = {'$set':obj}
-            self._coll.update({'_id':self._id}, up)
+            try:
+                self._coll.update({'_id':self._id}, up, safe=True)
+            except: return False
         return self._id

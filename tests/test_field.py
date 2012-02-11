@@ -12,6 +12,13 @@ logger = logging.getLogger("humongolus")
 
 orm.settings(logger=logger, db_connection=conn)
 
+class Widget(unittest.TestCase):
+
+    def test_render(self):
+        anne = objects.Female()
+        anne.name = "Anne"
+        print anne._get("name").render()
+
 class Field(unittest.TestCase):
 
     def setUp(self):
@@ -132,6 +139,12 @@ class Field(unittest.TestCase):
         car2 = objects.Scion(id=_id)
         human = car2._get("owner")()
         self.assertEqual(human._id, h_id)
+    
+
+    def test_render(self):
+        self.obj.name = self.name
+        self.obj.age = 27
+        self.assertEqual(self.obj._get("age").render(), 27)
 
     def tearDown(self):
         self.obj.__class__.__remove__()
@@ -159,6 +172,20 @@ class Find(unittest.TestCase):
             self.assertEqual(obj.get('name', None), None)
             self.assertEqual(obj.get('genitalia', None), self.genitalia)
 
+        obj = objects.Female.find_one({"_id":self.ids[0]}, as_dict=True, fields={"genitalia":True})
+        self.assertEqual(obj.get("genitalia", None), self.genitalia)
+    
+    def test_update(self):
+        obj = objects.Female(id=self.ids[0])
+        obj.update({"$set":{"name":"Woop"}})
+        obj2 = objects.Female(id=self.ids[0])
+        self.assertEqual(obj2.name, "Woop")
+    
+    def test_remove(self):
+        obj = objects.Female(id=self.ids[0])
+        obj.remove()
+        obj2 = objects.Female.find_one({"_id":self.ids[0]})
+        self.assertEqual(obj2, None)
 
     def tearDown(self):
         objects.Female.__remove__()
@@ -206,6 +233,13 @@ class Document(unittest.TestCase):
         j = self.obj._json()
         del j["human_id"]
         self.assertEqual(j, self.person)
+    
+    def test_map(self):
+        anne = objects.Female()
+        anne._map(self.person)
+        j = anne._json()
+        del j["human_id"]
+        self.assertEqual(j, self.person)
 
     def test_save(self):
         self.job.locations.append(self.loc)
@@ -227,9 +261,68 @@ class Document(unittest.TestCase):
         del j["human_id"]
         self.assertEqual(j, self.person)
     
-    def test_created(self): pass
-    def test_modified(self): pass
-    def test_active(self): pass
+    def test_bad_rel_type(self):
+        with self.assertRaises(Exception) as cm:
+            self.obj.jobs.append(objects.Location())
+
+        print cm.exception
+    
+    def test_bad_get(self):
+        with self.assertRaises(AttributeError):
+            self.obj._get("hoohaa")
+    
+    def test_bad_attr(self):
+        with self.assertRaises(AttributeError):
+            self.obj.hoohaa
+
+
+    def test_non_doc_relationship(self):
+        car = objects.Rodeo()
+        car.tires.append(1)
+        car.tires.append(2)
+        car.tires.append(3)
+        car.tires.append(4)
+        _id = car.save()
+        car2 = objects.Rodeo(id=_id)
+        self.assertEqual(car2.tires, [1,2,3,4])
+    
+    def test_mongo_exception(self):
+        obj = objects.BadHuman()
+        obj._coll.ensure_index("name", unique=True)
+        obj.name = "Test"
+        obj.save()
+        
+        obj2 = objects.BadHuman()
+        obj2.name = "Test"
+        _id = obj2.save()
+        self.assertEqual(_id, False)
+
+        obj3 = objects.BadHuman()
+        obj3.name = "Test"
+        obj3.save()
+
+        obj4 = objects.BadHuman()
+        obj4.name = "Tester"
+        obj4.save()
+        obj4.name = "Test"
+        _id2 = obj4.save()
+        self.assertEqual(_id2, False)
+        obj._coll.drop_indexes()
+        
+
+    def test_created(self):
+        self.obj.save()
+        print self.obj.created
+        self.assertEqual(self.obj.created.__class__, datetime.datetime) 
+
+    def test_modified(self):
+        self.obj.save()
+        print self.obj.modified
+        self.assertEqual(self.obj.modified.__class__, datetime.datetime)
+
+    def test_active(self):
+        self.obj.save()
+        self.assertEqual(self.obj.active, True)
 
     def tearDown(self):
         self.obj.__class__.__remove__()
