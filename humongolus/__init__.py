@@ -1,0 +1,382 @@
+import settings as _settings
+import datetime
+from pymongo.objectid import ObjectId
+
+EMPTY = ("", " ", None, "None")
+
+def settings(logger=None, db_connection=None):
+    _settings.LOGGER = logger
+    _settings.DB_CONNECTION = db_connection
+
+def import_class(kls):
+    parts = kls.split('.')
+    module = ".".join(parts[:-1])
+    m = __import__(module)
+    for comp in parts[1:]:
+        m = getattr(m, comp)            
+    return m
+
+class FieldException(Exception): pass
+class DocumentException(Exception): 
+    errors = {}
+    def __init__(self, errors):
+        Exception.__init__(self, "")
+        self.errors = errors
+
+class Widget(object):
+    _field = None
+    def __init__(self, field):
+        self._field = field
+    
+    def clean(self, val, doc=None):
+        return val
+    
+    def render(self, *args, **kwargs):
+        return self._field._value
+
+class Field(object):
+    logger = None
+    _name = None
+    _conn = None
+    _value = None
+    _dirty = None
+    _default = None
+    _required = False
+    _display = None
+    _error = None
+    _dbkey = None
+    _widget = None
+    _parent = None
+    __kwargs__ = {}
+    __args__ = ()
+
+    def __init__(self, *args, **kwargs):
+        self.logger = _settings.LOGGER
+        self._conn = _settings.DB_CONNECTION
+        self.__kwargs__ = kwargs
+        self.__args__ = args
+        for k,v in kwargs.iteritems():
+            if hasattr(self, "_%s" % k): setattr(self, "_%s" % k, v)
+        
+        self._dirty = self.clean(self._default, doc=None) if self._default else None
+        self._value = self.clean(self._default, doc=None) if self._default else None
+        self._error = None
+
+    def _clean(self, val, dirty=None, doc=None):
+        if val in EMPTY and self._required: raise FieldException("Required Field")
+        val = self.clean(val, doc=None)
+        val = self._widget(self).clean(val, doc=doc) if self._widget else val
+        self._dirty = self._value if not dirty else dirty
+        self._value = val
+    
+    def clean(self, val, doc=None): pass
+    
+    def _json(self):
+        return self._value
+    
+    def _save(self, namespace):
+        obj = {}
+        if self._value != self._dirty: obj[namespace] = self._value
+        return obj
+    
+    def _errors(self, namespace):
+        errors = {}
+        if self._error: errors[namespace] = self._error
+        return errors
+    
+    def _map(self, val, init=False, doc=None):
+        if init: self._clean(val, dirty=val, doc=doc)
+        else: self._clean(val, doc=doc)
+    
+    def render(self, *args, **kwargs):
+        if self._widget: return self._widget.render(*args, **kwargs)
+        return self._value
+
+class Lazy(object):
+    __kwargs__ = {}
+    __args__ = ()
+    _type = None
+    _key = None
+    _query = {}
+    _parent = None
+    _name = None
+
+    def __init__(self, *args, **kwargs):
+        self.logger = _settings.LOGGER
+        self.__args__ = args
+        self.__kwargs__ = kwargs
+        for k,v in kwargs.iteritems():
+            if hasattr(self, "_%s" % k): setattr(self, "_%s" % k, v)
+
+    
+    def __call__(self, **kwargs):
+        q = kwargs.get('query', {})
+        q.update({self._key:self._parent._id})
+        self._query.update(q)
+        return self._type.find(self._query)
+
+    def _save(self, *args, **kwargs): pass
+    def _errors(self, *args, **kwargs): pass
+    def _map(self, *args, **kwargs): pass
+    def _json(self, *args, **kwargs): pass
+
+class Relationship(list):
+    logger = None
+    _type = None
+    _dbkey = None
+    _parent = None
+    _name = None
+    __kwargs__ = {}
+    __args__ = ()
+
+
+    def __init__(self, *args, **kwargs):
+        self.logger = _settings.LOGGER
+        self.__kwargs__ = kwargs
+        self.__args__ = args
+        for k,v in kwargs.iteritems():
+            if hasattr(self, "_%s" % k): setattr(self, "_%s" % k, v)
+        
+
+    def append(self, obj):
+        if isinstance(obj, self._type): 
+            super(Relationship, self).append(obj)
+        else: raise Exception("%s not of type %s" % (obj.__class__.__name__, self._type.__name__))
+    
+    def _save(self, namespace):
+        ret = {}
+        for id, obj in enumerate(self):
+            ns = ".".join([namespace, str(id)])
+            try:
+                if obj._inited: ret.update(obj._save(namespace=ns))
+                else: ret.update({ns:obj._json()})
+            except Exception as e:
+                print e
+                ret[ns] = obj
+        return ret
+    
+    def _errors(self, namespace):
+        errors = {}  
+        for id, obj in enumerate(self):
+            ns = ".".join([namespace, str(id)])
+            try:
+                errors.update(obj._errors(namespace=ns))
+            except Exception as e: pass
+        return errors
+
+           
+    def _map(self, val, init=False, doc=None):
+        for item in val:
+            obj = self._type()
+            obj._map(item, init=init, doc=None)
+            self.append(obj)
+
+    def _json(self):
+        ret = []
+        for obj in self:
+            try:
+                ret.append(obj._json())
+            except:
+                ret.append(obj)
+        
+        return ret
+
+class base(object):
+    logger = None
+    _inited = False
+    _parent = None
+    _name = None
+    __kwargs__ = {}
+    __args__ = ()
+    __keys__ = []
+
+
+    def __init__(self, *args, **kwargs):
+        self.logger = _settings.LOGGER
+        self.__kwargs__ = kwargs
+        self.__args__ = args
+        self._inited = False
+        p = kwargs.get("parent", None)
+        self._parent = p if p != self else None
+        self.__keys__ = set()
+        for cls in reversed(self.__class__._getbases()):
+            for k,v in cls.__dict__.iteritems():
+                if isinstance(v, (base, Field, Relationship, Lazy)):
+                    if not isinstance(v, Lazy): self.__keys__.add(unicode(k))
+                    v.__kwargs__["parent"] = p
+                    v.__kwargs__['name'] = k
+                    self.__dict__[k] = v.__class__(*v.__args__, **v.__kwargs__)
+    
+    def _get(self, key):
+        try:
+            return self.__dict__[key]
+        except:
+            raise AttributeError("%s is an invalid attribute") 
+
+    def __setattr__(self, key, val):
+        try:
+            fi = self.__dict__.get(key, None)
+            fi._clean(val)  
+        except FieldException as e:
+            fi._error = e
+        except Exception as e:
+            self.__dict__[key] = val
+    
+    def __getattribute__(self, key):
+        try:
+            obj = object.__getattribute__(self, key)
+            if isinstance(obj, Field): return obj._value
+            else: return obj
+        except Exception as e: pass
+        return None
+    
+    @classmethod
+    def _getbases(cls):
+        b = [cls]        
+        for i in cls.__bases__:
+            b.append(i)
+            try:
+                b.extend(i.__getbases__())
+            except:pass
+        return b
+    
+    def _save(self, namespace=None):
+        obj = {}
+        for k,v in self.__dict__.iteritems():
+            ns = ".".join([namespace, k]) if namespace else k
+            try:
+                obj.update(v._save(namespace=ns))
+            except Exception as e: pass 
+        return obj
+    
+    def _errors(self, namespace=None):
+        errors = {}
+        for k,v in self.__dict__.iteritems():
+            ns = ".".join([namespace, k]) if namespace else k
+            try:
+                errors.update(v._errors(namespace=ns))
+            except Exception as e: pass
+        return errors
+
+    def _map(self, vals, init=False, doc=None):
+        self._inited = True
+        for k,v in vals.iteritems():
+            try:
+                self.__dict__.get(k, None)._map(v, init=init, doc=doc)
+            except: pass
+
+    def _json(self):
+        obj = {}
+        self._save()
+        for k,v in self.__dict__.iteritems():
+            try:
+                if not isinstance(v, Lazy): 
+                    obj[k] = v._json()
+            except: pass
+        
+        return obj
+
+class EmbeddedDocument(base):pass
+
+class Document(base):
+    _id = None
+    _db = None
+    _collection = None
+    _conn = None
+    _coll = None
+    __modified__ = None
+    __created__ = None
+    __active__ = True
+    __hargs__ = {}
+    __hargskeys__ = None
+
+    def __init__(self, *args, **kwargs):
+        kwargs['parent'] = self
+        super(Document, self).__init__(*args, **kwargs)
+        self._id = None
+        self.__hargs__ = {}
+        self.__hargskeys__ = set()
+        self._conn = _settings.DB_CONNECTION
+        self._coll = self._conn[self._db][self._collection]
+        if kwargs.get('id', None): 
+            self._id = ObjectId(kwargs['id'])
+            self._doc()
+    """
+    this is called by pymongo for each key:val pair for each document 
+    returned by find and find_one
+    """ 
+    def __setitem__(self, key, val):
+        #_id is a built-in field, it won't be in self.__keys__
+        if key != '_id':
+            self.__hargs__[key] = val
+            self.__hargskeys__.add(key)
+            #an incomplete document from mongo will never call _map
+            if self.__keys__.issubset(self.__hargskeys__) and self._id:
+                self._map(self.__hargs__, init=True)
+        else: self._id = val 
+
+    def _doc(self):
+        doc = self._coll.find_one({'_id':self._id})
+        self._map(doc, init=True)
+
+    @property
+    def active(self): return self.__active__
+    
+    @property
+    def created(self): return self.__created__
+
+    @property
+    def modified(self): return self.__modified__
+
+    @classmethod
+    def _connection(cls):
+        _conn = _settings.DB_CONNECTION
+        _coll = _conn[cls._db][cls._collection]
+        return _coll
+
+    @classmethod
+    def find(cls, *args, **kwargs):
+        if not kwargs.get("as_dict", None): kwargs['as_class'] = cls
+        return cls._connection().find(*args, **kwargs)
+    
+    @classmethod
+    def find_one(cls, *args, **kwargs):
+        if not kwargs.get("as_dict"): kwargs['as_class'] = cls
+        kwargs['as_class'] = cls
+        return cls._connection().find_one(*args, **kwargs)    
+    
+    @classmethod
+    def __remove__(cls, *args, **kwargs):
+        cls._connection().remove(*args, **kwargs)
+    
+    def __update__(cls, *args, **kwargs):
+        cls._connection().update(*args, **kwargs)    
+
+    def remove(self):
+        self.__class__.__remove__({"_id":self._id})
+    
+    def update(self, *args, **kwargs):
+        if len(args): args[0].update({"_id":self._id})
+        self.__class__.__update__(*args, **kwargs)
+
+    def save(self):
+        errors = self._errors()
+        if len(errors.keys()):
+            self.logger.error(errors) 
+            raise DocumentException(errors)
+        if not self._id:
+            self.__created = datetime.datetime.utcnow()
+            self.__modified = datetime.datetime.utcnow()
+            self.__active = True
+            obj = self._json()
+            obj['__created__'] = self.__created
+            obj['__modified__']= self.__modified
+            obj['__active__'] = self.__active
+            self._id = self._coll.insert(obj, safe=True)
+        else:
+            obj = self._save()
+            self.__modified = datetime.datetime.utcnow()
+            obj['__modified__'] = self.__modified
+            up = {'$set':obj}
+            self._coll.update({'_id':self._id}, up)
+        return self._id

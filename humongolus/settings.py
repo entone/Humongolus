@@ -1,0 +1,2 @@
+LOGGER=None
+DB_CONNECTION=None
