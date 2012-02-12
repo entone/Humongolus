@@ -1,11 +1,11 @@
 # Humongolus | A Python ORM for MongoDB
 
 ## Features
-* Strict Type Checking
+* Type Validation
 * Lazy Relationships
-* Fully Featured Indexes
+* Full MongoDB Index Support
 * Dirty Updating (only send changes to db)
-* Full Test Suite
+* Full Test Suite (100% code coverage)
 * Exposes default MongoDB cursors 
 * Widget System for Fields
 * Large Collection of Default Field Types
@@ -17,6 +17,7 @@
     * DocumentID (pseudo DBRef)
     * AutoIncrement
     * DynamicDocument (pseudo DBRef)
+    * Boolean
     * Geo (coming soon)
     * Email (coming soon)
     * Phone (coming soon)
