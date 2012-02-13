@@ -1,6 +1,6 @@
-# Humongolus | A Python ORM and Persistance Manager for MongoDB
+### Humongolus | A Python ORM and Persistance Manager for MongoDB
 
-## Features
+#### Features
 * Type Validation
 * Lazy Relationships
 * Full MongoDB Index Support
@@ -27,7 +27,7 @@
 * Easily integrates with Backbone.js or other client side frameworks
 * Plugins (coming soon) 
 
-### Usage
+#### Usage
 
     from pymongo.connection import Connection
     import logging
