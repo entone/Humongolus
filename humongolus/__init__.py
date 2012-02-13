@@ -1,12 +1,14 @@
 import settings as _settings
 import datetime
+import pymongo
 from pymongo.objectid import ObjectId
 
 EMPTY = ("", " ", None, "None")
 
-def settings(logger=None, db_connection=None):
+def settings(logger, db_connection):
     _settings.LOGGER = logger
     _settings.DB_CONNECTION = db_connection
+    ensure_indexes()
 
 def import_class(kls):
     parts = kls.split('.')
@@ -15,6 +17,7 @@ def import_class(kls):
     for comp in parts[1:]:
         m = getattr(m, comp)            
     return m
+
 
 class FieldException(Exception): pass
 class DocumentException(Exception): 
@@ -286,6 +289,7 @@ class Document(base):
     _collection = None
     _conn = None
     _coll = None
+    _indexes = []
     __modified__ = None
     __created__ = None
     __active__ = True
@@ -347,6 +351,11 @@ class Document(base):
         return cls._connection().find_one(*args, **kwargs)    
     
     @classmethod
+    def __ensureindexes__(cls):
+        conn = cls._connection()
+        for i in cls._indexes: i.create(conn)
+
+    @classmethod
     def __remove__(cls, *args, **kwargs):
         cls._connection().remove(*args, **kwargs)
     
@@ -399,3 +408,36 @@ class Document(base):
                 self._coll.update({'_id':self._id}, up, safe=True)
             except: return False
         return self._id
+
+class Index(object):
+    DESCENDING = pymongo.DESCENDING
+    ASCENDING = pymongo.ASCENDING
+    GEO2D = pymongo.GEO2D
+    _name = None
+    _name = None
+    _key = None
+    _drop_dups = None
+    _unique = None
+    _background = None
+    _min = -180
+    _max = 180
+
+    def __init__(self, name, **kwargs):
+        self._name = name
+        for k,v in kwargs.iteritems():
+            if hasattr(self, "_%s" % k): setattr(self, "_%s" % k, v)
+    
+    def create(self, conn):
+        if not isinstance(self._key, list): self._key = [self._key]
+        conn.ensure_index(self._key, drop_dups=self._drop_dups, background=self._background, unique=self._unique, min=self._min, max=self._max, name=self._name)
+
+
+def ensure_indexes():
+    for cls in Document.__subclasses__():
+        _settings.LOGGER.debug("Starting Indexing: %s" % cls.__name__)
+        cls.__ensureindexes__()
+        _settings.LOGGER.debug("Done Indexing: %s" % cls.__name__)
+
+
+
+

@@ -18,6 +18,11 @@ class Job(orm.EmbeddedDocument):
 class Human(orm.Document):
     _db = "test"
     _collection = "humans"
+    _indexes = [
+        orm.Index("name", key=[("name", orm.Index.DESCENDING)]), 
+        orm.Index("human_id", key=[("human_id", orm.Index.ASCENDING)]),
+        orm.Index("geo_location", key=[("jobs.locations.geo", orm.Index.GEO2D)])
+    ]
     human_id = field.AutoIncrement(collection="human")
     name = field.Char(required=True, min=2, max=25, widget=orm.Widget)
     age = field.Integer(min=0, max=3000)
