@@ -359,6 +359,15 @@ class Document(base):
     
     def update(self, update, **kwargs):
         self.__class__.__update__({"_id":self._id}, update, **kwargs)
+    
+
+    def json(self):
+        obj = self._json()
+        obj['_id'] = self._id
+        obj['__active__'] = self.active
+        obj['__created__'] = self.created
+        obj['__modified__'] = self.modified
+        return obj
 
     def save(self):
         errors = self._errors()

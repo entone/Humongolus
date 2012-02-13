@@ -304,6 +304,9 @@ class Document(unittest.TestCase):
         j = self.obj._json()
         del j["human_id"]
         self.assertEqual(j, self.person)
+        _id = self.obj.save()
+        o = self.obj.json()
+        self.assertEqual(_id, o['_id'])
     
     def test_map(self):
         anne = objects.Female()
