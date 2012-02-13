@@ -1,4 +1,4 @@
-### Humongolus | A Python ORM and Persistance Manager for MongoDB
+### ORM and Persistance Framework for Python and MongoDB
 
 #### Features
 * Type Validation
