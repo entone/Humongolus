@@ -24,6 +24,7 @@
     * Phone
 * Endless EmbeddedDocuments
 * Default Created/Modified attributes
+* Easily integrates with Backbone.js or other client side frameworks
 * Plugins (coming soon) 
 
 ### Usage
