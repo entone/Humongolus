@@ -6,6 +6,10 @@ class Location(orm.EmbeddedDocument):
     city = field.Char(required=True)
     state = field.Char()
 
+class LocationGeo(Location):
+    geo = field.Geo()
+    active = field.Boolean()
+
 class Job(orm.EmbeddedDocument):
     employer = field.Char()
     title = field.Char(required=True)
@@ -48,5 +52,7 @@ class Rodeo(Car):
 
 class BadHuman(Human):
     unique = field.Integer()
+    email = field.Email()
+    phone = field.Phone()
 
 Human.cars = orm.Lazy(type=Car, key='owner')

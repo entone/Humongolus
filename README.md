@@ -1,4 +1,4 @@
-# Humongolus | A Python ORM for MongoDB
+# Humongolus | A Python ORM and Persistance Manager for MongoDB
 
 ## Features
 * Type Validation
@@ -18,9 +18,10 @@
     * AutoIncrement
     * DynamicDocument (pseudo DBRef)
     * Boolean
-    * Geo (coming soon)
-    * Email (coming soon)
-    * Phone (coming soon)
+    * Regex
+    * Geo
+    * Email
+    * Phone
 * Endless EmbeddedDocuments
 * Default Created/Modified attributes
 * Plugins (coming soon) 

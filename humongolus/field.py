@@ -1,9 +1,30 @@
 import datetime
+import re
 from humongolus import Field, FieldException, Document, import_class
 from pymongo.objectid import ObjectId
 
 class MinException(FieldException): pass
 class MaxException(FieldException): pass
+
+def parse_phone(number):
+    try:
+        phonePattern = re.compile(r'''
+                        # don't match beginning of string, number can start anywhere
+            (\d{3})     # area code is 3 digits (e.g. '800')
+            \D*         # optional separator is any number of non-digits
+            (\d{3})     # trunk is 3 digits (e.g. '555')
+            \D*         # optional separator
+            (\d{4})     # rest of number is 4 digits (e.g. '1212')
+            \D*         # optional separator
+            (\d*)       # extension is optional and can be any number of digits
+            $           # end of string
+            ''', re.VERBOSE)
+        res = phonePattern.search(number).groups()
+        st = "".join(res)
+        if st.startswith("1"): return "+%s" % st
+        else: return "+1%s" % st
+    except Exception as e:
+        raise e
 
 class Char(Field):
     _max=None
@@ -39,12 +60,30 @@ class Float(Integer):
 
 class Date(Field):
 
-    def clean(self, val, doc):
+    def clean(self, val, doc=None):
         try:
             if isinstance(val, datetime.datetime): return val
             return datetime.datetime(val)
         except: raise FieldException("%s: invalid datetime" % val)
 
+
+class Boolean(Field):
+
+    def clean(self, val, doc=None):
+        try:
+            if isinstance(val, bool): return val
+            return bool(val)
+        except: raise FieldException("%s invalid boolean" % val)
+
+class Geo(Field):
+    def clean(self, val, doc=None):
+        try:
+            if isinstance(val, list):
+                if len(val) == 2:
+                    return val
+                else: raise FieldException("to many values: %s" % val)
+            else: raise FieldException("must be type array")
+        except: raise FieldException("%s must be array" % val)
 
 class TimeStamp(Date):
 
@@ -59,11 +98,13 @@ class DocumentId(Field):
 
     def clean(self, val, doc=None):
         val = val._id if hasattr(val, '_id') else val
-        v = ObjectId(val)
+        if val: 
+            v = ObjectId(val)
+        else: raise FieldException("value cannot be None")
         return v
     
     def __call__(self):
-        if self._value and self._type:
+        if not self._value is None and self._type:
             return self._type(id=self._value)
         else: raise FieldException("Cannot instantiate %s with id %s" % (self._type, self._value))
 
@@ -98,3 +139,26 @@ class DynamicDocument(Field):
         else: raise Exception("Bad Value: %s" % self._value)
 
 
+class Regex(Char):
+    _reg = None
+    _disp_error = None
+
+    def clean(self, val, doc=None):
+        val = super(Regex, self).clean(val, doc)
+        if not self._reg.search(val): raise FieldException("%s: pattern not found" % val if not self._disp_error else self._disp_error)
+        return val
+
+class Email(Regex):
+    _disp_rror = "Invalid Email Address"
+    _reg = re.compile(
+    r"(^[-!#$%&'*/=?^_`{}|~0-9A-Z]+(\.[-!#$%&'*/=?^_`{}|~0-9A-Z]+)*"  # dot-atom
+    r'|^"([\001-\010\013\014\016-\037!#-\[\]-\177]|\\[\001-011\013\014\016-\177])*"' # quoted-string
+    r')@(?:[A-Z0-9-]+\.)+[A-Z]{2,6}$', re.IGNORECASE)  # domain
+
+class Phone(Char):
+
+    def clean(self, val, doc=None):
+        val = super(Phone, self).clean(val, doc)
+        try:
+            return parse_phone(val)
+        except: raise FieldException("%s is not a valid format" % val)

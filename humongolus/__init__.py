@@ -184,7 +184,7 @@ class Relationship(list):
         
         return ret
 
-class base(object):
+class base(dict):
     logger = None
     _inited = False
     _parent = None
@@ -210,12 +210,6 @@ class base(object):
                     v.__kwargs__['name'] = k
                     self.__dict__[k] = v.__class__(*v.__args__, **v.__kwargs__)
     
-    def _get(self, key):
-        try:
-            return self.__dict__[key]
-        except:
-            raise AttributeError("%s is an invalid attribute") 
-
     def __setattr__(self, key, val):
         try:
             fi = self.__dict__.get(key, None)
@@ -231,7 +225,7 @@ class base(object):
             if isinstance(obj, Field): return obj._value
             else: return obj
         except Exception as e: raise e
-    
+
     @classmethod
     def _getbases(cls):
         b = [cls]        
@@ -242,6 +236,13 @@ class base(object):
             except:pass
         return b
     
+    def _get(self, key):
+        try:
+            return self.__dict__[key]
+        except:
+            raise AttributeError("%s is an invalid attribute") 
+
+
     def _save(self, namespace=None):
         obj = {}
         for k,v in self.__dict__.iteritems():

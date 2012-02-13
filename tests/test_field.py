@@ -4,6 +4,7 @@ import objects
 from pymongo.connection import Connection
 import logging
 import humongolus as orm
+from humongolus.field import FieldException
 
 conn = Connection()
 FORMAT = '%(asctime)-15s %(message)s'
@@ -132,6 +133,11 @@ class Field(unittest.TestCase):
 
     def test_document_id(self):
         self.obj.name = self.name
+        car = objects.Scion()
+        car.owner = self.obj
+        with self.assertRaises(FieldException) as cm:
+            car._get("owner")().name
+
         h_id = self.obj.save()
         car = objects.Scion()
         car.owner = self.obj
@@ -145,6 +151,70 @@ class Field(unittest.TestCase):
         self.obj.name = self.name
         self.obj.age = 27
         self.assertEqual(self.obj._get("age").render(), 27)
+
+    def test_geo(self):
+        loc = objects.LocationGeo()
+        print loc._json()
+        loc.city = "Chicago"
+        loc.state = "IL"
+
+        loc.geo = "sdjfhskljdfhskdhf"
+        self.assertEqual(loc._get("geo")._error.__class__.__name__, 'FieldException')
+        print loc._get("geo")._error
+
+        loc.geo = [545454, 654654, 654654]
+        self.assertEqual(loc._get("geo")._error.__class__.__name__, 'FieldException')
+        print loc._get("geo")._error
+
+        loc.geo = [48.326, -81.656565]
+        self.assertEqual(loc.geo, [48.326, -81.656565])
+
+    def test_boolean(self):
+        loc = objects.LocationGeo()
+        print loc._json()
+        loc.city = "Chicago"
+        loc.state = "IL"
+        loc.geo = [48.326, -81.656565]
+        loc.active = "kjsdhfksjhdflksjhdflksjhdf"
+        print loc.active
+        self.assertEqual(loc.active, True)
+
+        loc.active = 0
+        self.assertEqual(loc.active, False)
+
+        loc.active = True
+        self.assertEqual(loc.active, True)
+        
+        loc.active = False
+        self.assertEqual(loc.active, False)        
+    
+    def test_phone(self):
+        obj = objects.BadHuman()
+        print obj._get("phone")
+        obj.name = "Anne"
+        obj.phone = "sjkdhfkjshdfksjhdf"
+        print obj._get("phone")
+        self.assertEqual(obj._get("phone")._error.__class__.__name__, "FieldException")
+
+
+
+        obj.phone = "810-542.0141"
+        self.assertEqual(obj.phone, u"+18105420141")
+
+        obj.phone = "1-810-542.0141"
+        self.assertEqual(obj.phone, u"+18105420141")
+
+    def test_email(self):
+        obj = objects.BadHuman()
+        obj.name = "Anne"
+        obj.email = "sdsdff"
+        self.assertEqual(obj._get("email")._error.__class__.__name__, "FieldException")
+
+        obj.email = "test@trest"
+        self.assertEqual(obj._get("email")._error.__class__.__name__, "FieldException")
+
+        obj.email = "test@test.com"
+        self.assertEqual(obj.email, "test@test.com")
 
     def tearDown(self):
         self.obj.__class__.__remove__()
@@ -162,6 +232,7 @@ class Find(unittest.TestCase):
     
     def test_find(self):
         ids = []
+        print self.ids
         for obj in objects.Female.find().sort('_id'):
             ids.append(obj._id)
         
