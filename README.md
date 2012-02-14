@@ -31,6 +31,7 @@
     * Plugins
     * Implement depends_on for validation
     * Choice Fields (Model, Collection and List)
+    * Implement DBKey
 
 #### Usage
 
