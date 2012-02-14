@@ -118,6 +118,15 @@
     print _id
 
         4f36dd48eac0742b92000000
+   
+    for person in Human.find().sort({"name":-1}):
+        print person.name
+        print person.created
+        print person.modifed
+        for job in person.jobs:
+            print job.title
+            for loc in job.locations:
+                print loc.city
 
     car = Car()
     car.owner = chris
