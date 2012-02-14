@@ -25,7 +25,12 @@
 * Endless EmbeddedDocuments
 * Default Created/Modified attributes
 * Easily integrates with Backbone.js or other client side frameworks
-* Plugins (coming soon) 
+* TODO
+    * Tutorials
+    * Enhanced Widget System
+    * Plugins
+    * Implement depends_on for validation
+    * Choice Fields (Model, Collection and List)
 
 #### Usage
 
