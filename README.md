@@ -7,7 +7,7 @@
 * Dirty Updating (only send changes to db)
 * Full Test Suite (100% code coverage)
 * Exposes default MongoDB cursors 
-* Widget System for Fields
+* Widget System
 * Large Collection of Default Field Types
     * Char
     * Integer
@@ -22,15 +22,14 @@
     * Geo
     * Email
     * Phone
+    * Choice Fields (Model, Collection and List)
 * Endless EmbeddedDocuments
 * Default Created/Modified attributes
 * Easily integrates with Backbone.js or other client side frameworks
 * TODO
     * Tutorials
-    * Enhanced Widget System
     * Plugins
     * Implement depends_on for validation
-    * Choice Fields (Model, Collection and List)
     * Implement DBKey
 
 #### Usage
