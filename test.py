@@ -45,7 +45,7 @@ class Human(orm.Document):
     weight = field.Float(min=1, max=30000)
     jobs = orm.Relationship(type=Job)
     genitalia = field.Char()
-    car = field.ModelChoice(type=Car, display=car_disp)
+    car = field.ModelChoice(type=Car, widget=widget.Select, display=car_disp)
 
 class Female(Human):
     genitalia = field.Char(default='inny')
@@ -111,7 +111,8 @@ print car._get("make").render(widget=widget.Input, classes="red checked")
 
 print car.render(widget=CarDisplay, cls='test')
 
-print chris._get("car").render(widget=widget.Select, classes="Woot")
+#we've already passed the widget in with the model instantiation
+print chris._get("car").render(classes="Woot")
 
 
 
