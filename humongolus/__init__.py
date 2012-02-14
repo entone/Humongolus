@@ -27,15 +27,16 @@ class DocumentException(Exception):
         self.errors = errors
 
 class Widget(object):
-    _field = None
-    def __init__(self, field):
-        self._field = field
+    _object = None
+
+    def __init__(self, obj):
+        self._object = obj
     
     def clean(self, val, doc=None):
         return val
     
     def render(self, *args, **kwargs):
-        return self._field._value
+        return self._object.__repr__()
 
 class Field(object):
     logger = None
@@ -92,8 +93,18 @@ class Field(object):
         else: self._clean(val, doc=doc)
     
     def render(self, *args, **kwargs):
-        if self._widget: return self._widget(field=self).render(*args, **kwargs)
+        self._widget = kwargs.get("widget", self._widget)
+        if self._widget: return self._widget(self).render(*args, **kwargs)
         return self._value
+    
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        return str(self._value)
+    
+    def __unicode__(self):
+        return unicode(self._value)
 
 class Lazy(object):
     __kwargs__ = {}
@@ -103,6 +114,7 @@ class Lazy(object):
     _query = {}
     _parent = None
     _name = None
+    _widget = None
 
     def __init__(self, *args, **kwargs):
         self.logger = _settings.LOGGER
@@ -123,12 +135,27 @@ class Lazy(object):
     def _map(self, *args, **kwargs): pass
     def _json(self, *args, **kwargs): pass
 
+    def render(self, *args, **kwargs):
+        self._widget = kwargs.get("widget", self._widget)
+        if self._widget: return self._widget(self).render(*args, **kwargs)
+        return self.__repr__()
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        return str(self.__class__.__name__)
+    
+    def __unicode__(self):
+        return unicode(self.__class__.__name__)
+
 class Relationship(list):
     logger = None
     _type = None
     _dbkey = None
     _parent = None
     _name = None
+    _widget = None
     __kwargs__ = {}
     __args__ = ()
 
@@ -186,12 +213,27 @@ class Relationship(list):
                 ret.append(obj)
         
         return ret
+    
+    def render(self, *args, **kwargs):
+        self._widget = kwargs.get("widget", self._widget)
+        if self._widget: return self._widget(self).render(*args, **kwargs)
+        return self.__repr__()
 
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        return str(self.__class__.__name__)
+    
+    def __unicode__(self):
+        return unicode(self.__class__.__name__)
+        
 class base(dict):
     logger = None
     _inited = False
     _parent = None
     _name = None
+    _widget = None
     __kwargs__ = {}
     __args__ = ()
     __keys__ = []
@@ -280,6 +322,20 @@ class base(dict):
             except: pass
         
         return obj
+    
+    def render(self, *args, **kwargs):
+        self._widget = kwargs.get("widget", self._widget)
+        if self._widget: return self._widget(self).render(*args, **kwargs)
+        return self.__repr__()
+
+    def __repr__(self):
+        return self.__str__()
+
+    def __str__(self):
+        return str(self.__class__.__name__)
+    
+    def __unicode__(self):
+        return unicode(self.__class__.__name__)
 
 class EmbeddedDocument(base):pass
 

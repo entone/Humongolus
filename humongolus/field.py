@@ -139,6 +139,49 @@ class DynamicDocument(Field):
         else: raise Exception("Bad Value: %s" % self._value)
 
 
+def model_display(obj):
+    return {"value":obj._id, "display":unicode(obj)}
+
+def collection_display(obj):
+    return {"value":obj.get("id", None), "display":obj}
+
+class Choice(Char):
+    _choices = []
+
+    def clean(self, val, doc=None):
+        val = super(Choice, self).clean(val, doc=doc)
+        vals = [opt['value'] if isinstance(opt, dict) else opt for opt in self._choices]
+        if not v in vals: raise FieldException("%s is not a valid option")
+        return val
+
+class ModelChoice(DocumentId):
+    _type = None
+    _display = model_display
+    _fields = None
+    _query = {}
+    _sort = {}
+
+    def render(self, **kwargs):
+        cur = self._type.find(self._query, fields=self._fields)
+        cur = cur.sort(self._sort) if self._sort else cur
+        self._choices = [self._display(i) for i in cur]
+        return super(ModelChoice, self).render(**kwargs)
+
+class CollectionChoice(Choice):
+    _db = None
+    _collection = None
+    _display = collection_display
+    _fields = None
+    _query = {}
+    _sort = {}
+
+    def render(self, **kwargs):
+        cur = self.self._conn[self._db][self._collection].find(self._query, fields=self._fields)
+        cur = cur.sort(self._sort) if self._sort else cur
+        self._choices = [self._display(i) for i in cur]
+        return super(CollectionChoice, self).render(**kwargs)
+        
+
 class Regex(Char):
     _reg = None
     _disp_error = None
