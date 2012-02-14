@@ -1,4 +1,4 @@
-### ORM and Persistance Framework for Python and MongoDB
+### ORM and Persistence Framework for Python and MongoDB
 
 #### Features
 * Type Validation
