@@ -4,6 +4,7 @@ import objects
 from pymongo.connection import Connection
 import logging
 import humongolus as orm
+import humongolus.widget as widget
 from humongolus.field import FieldException
 
 conn = Connection()
@@ -298,6 +299,21 @@ class Document(unittest.TestCase):
             ]
         }
     
+
+    def test_repr(self):
+        print unicode(self.obj)
+        print self.obj
+        print self.obj.jobs
+        print unicode(self.obj.jobs)
+        print self.obj.name
+        print unicode(self.obj.name)
+        print unicode(self.obj._get("name"))
+        print self.obj._get("name").render(widget=orm.Widget)
+        print self.obj.cars.render()
+        print unicode(self.obj.cars)
+        print self.obj.jobs.render()
+        print self.obj.render()
+
     def test_json(self):
         self.job.locations.append(self.loc)
         self.obj.jobs.append(self.job)
@@ -429,4 +445,47 @@ class Lazy(unittest.TestCase):
 
     def tearDown(self):
         self.obj.__class__.__remove__()
-        #objects.Car.__remove__()
+        objects.Car.__remove__()
+
+class Widget(unittest.TestCase):
+
+    def setUp(self):
+        self.car = objects.Car()
+        self.car.make = "Isuzu"
+        self.car.model = "Rodeo"
+        self.car.year = datetime.datetime(2007, 1, 1)
+        self.text_html= "<input type='text' name='make' value='Isuzu' class='red checked'  />"
+        self.choice_html = "<select name='car' classes='Woot'><option value='%s'>Isuzu Rodeo 2007-01-01 00:00:00</option></select>"
+        self.object_html = """<ul class='test'>
+                    <li>Make: Isuzu</li>
+                    <li>Model: Rodeo</li>
+                    <li>Year: 2007-01-01 00:00:00</li>
+                </ul>"""
+    
+
+    def test_input_render(self):
+        text = self.car._get("make").render(widget=widget.Input, classes="red checked")
+        self.assertEqual(text.strip(), self.text_html.strip())
+    
+    def test_choice_render(self):
+        _id = self.car.save()
+        select = self.choice_html % str(_id)
+        obj = objects.BadHuman()
+        text = obj._get("car").render(classes="Woot")
+        self.assertEqual(text.strip(), select.strip())
+
+    def test_object_render(self):
+        text = self.car.render(widget=objects.CarDisplay, cls='test')
+        self.assertEqual(text.strip(), self.object_html.strip())
+
+    def test_checkbox(self):
+        obj = objects.BadHuman()
+        text = obj._get("active").render()
+        print text
+        with self.assertRaises(Exception) as cm:
+            correct = text.index("CHECKED")
+        obj.active = True
+        checked = obj._get("active").render()
+        print checked
+        correct = checked.index("CHECKED")
+        self.assertGreater(correct, -1)

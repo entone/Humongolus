@@ -68,7 +68,7 @@ class Date(Field):
 
 
 class Boolean(Field):
-
+    _default = False
     def clean(self, val, doc=None):
         try:
             if isinstance(val, bool): return val
@@ -143,7 +143,7 @@ def model_display(obj):
     return {"value":obj._id, "display":unicode(obj)}
 
 def collection_display(obj):
-    return {"value":obj.get("id", None), "display":obj}
+    return {"value":obj.get("_id", None), "display":obj}
 
 class Choice(Char):
     _choices = []

@@ -25,8 +25,10 @@ class CheckBox(Input):
 	_type = "checkbox"
 
 	def render(self, *args, **kwargs):
-		extra = "checked='CHECKED'" if self._value else ""
+		extra = "checked='CHECKED'" if self._object._value else ""
 		kwargs["extra"] = extra
+		kwargs["value"] = self._object._name
+		print kwargs
 		return super(CheckBox, self).render(*args, **kwargs)
 
 class Select(Input):

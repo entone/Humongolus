@@ -1,6 +1,10 @@
 import humongolus as orm
 import datetime
 import humongolus.field as field
+import humongolus.widget as widget
+
+def car_disp(car):
+    return {"value":car._id, "display":"%s %s %s" % (car.make, car.model, car.year)}
 
 class Location(orm.EmbeddedDocument):
     city = field.Char(required=True)
@@ -45,6 +49,18 @@ class Car(orm.Document):
     model = field.Char()
     year = field.Date()
 
+class CarDisplay(orm.Widget):
+    #ideally you're using some sort of templating engine, I prefer Mako.
+    def render(self, *args, **kwargs):
+        return """
+                <ul class='%s'>
+                    <li>Make: %s</li>
+                    <li>Model: %s</li>
+                    <li>Year: %s</li>
+                </ul>
+        """ % (kwargs.get("cls", ""), self._object.make, self._object.model, self._object.year)
+
+
 class Scion(Car):
     any_owner = field.DynamicDocument()
     make = field.Char(default="Scion")
@@ -59,5 +75,7 @@ class BadHuman(Human):
     unique = field.Integer()
     email = field.Email()
     phone = field.Phone()
+    car = field.ModelChoice(type=Car, widget=widget.Select, display=car_disp)
+    active = field.Boolean(widget=widget.CheckBox)
 
 Human.cars = orm.Lazy(type=Car, key='owner')
