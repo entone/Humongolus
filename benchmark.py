@@ -22,7 +22,7 @@ class Human(orm.Document):
     age = field.Integer(min=0, max=3000)
     height = field.Float(min=1, max=100000)
     weight = field.Float(min=1, max=30000)
-    jobs = orm.Relationship(type=Job)
+    jobs = orm.List(type=Job)
     genitalia = field.Char()
 
 Human.__remove__()

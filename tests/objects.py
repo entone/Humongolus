@@ -17,7 +17,7 @@ class LocationGeo(Location):
 class Job(orm.EmbeddedDocument):
     employer = field.Char()
     title = field.Char(required=True)
-    locations = orm.Relationship(type=Location)
+    locations = orm.List(type=Location)
 
 class Human(orm.Document):
     _db = "test"
@@ -32,7 +32,7 @@ class Human(orm.Document):
     age = field.Integer(min=0, max=3000)
     height = field.Float(min=1, max=100000)
     weight = field.Float(min=1)
-    jobs = orm.Relationship(type=Job)
+    jobs = orm.List(type=Job)
     genitalia = field.Char()
 
 class Female(Human):
@@ -69,7 +69,7 @@ class Scion(Car):
     silly_date = field.TimeStamp()
 
 class Rodeo(Car):
-    tires = orm.Relationship(type=int)
+    tires = orm.List(type=int)
 
 class BadHuman(Human):
     unique = field.Integer()

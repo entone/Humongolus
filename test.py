@@ -33,7 +33,7 @@ class Location(orm.EmbeddedDocument):
 class Job(orm.EmbeddedDocument):
     employer = field.Char()
     title = field.Char(required=True)
-    locations = orm.Relationship(type=Location)
+    locations = orm.List(type=Location)
 
 class Human(orm.Document):
     _db = "test"
@@ -43,7 +43,7 @@ class Human(orm.Document):
     age = field.Integer(min=0, max=3000)
     height = field.Float(min=1, max=100000)
     weight = field.Float(min=1, max=30000)
-    jobs = orm.Relationship(type=Job)
+    jobs = orm.List(type=Job)
     genitalia = field.Char()
     car = field.ModelChoice(type=Car, widget=widget.Select, display=car_disp)
 

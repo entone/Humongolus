@@ -149,7 +149,7 @@ class Lazy(object):
     def __unicode__(self):
         return unicode(self.__class__.__name__)
 
-class Relationship(list):
+class List(list):
     logger = None
     _type = None
     _dbkey = None
@@ -170,7 +170,7 @@ class Relationship(list):
 
     def append(self, obj):
         if isinstance(obj, self._type): 
-            super(Relationship, self).append(obj)
+            super(List, self).append(obj)
         else: raise Exception("%s not of type %s" % (obj.__class__.__name__, self._type.__name__))
     
     def _save(self, namespace):
@@ -249,7 +249,7 @@ class base(dict):
         self.__keys__ = set()
         for cls in reversed(self.__class__._getbases()):
             for k,v in cls.__dict__.iteritems():
-                if isinstance(v, (base, Field, Relationship, Lazy)):
+                if isinstance(v, (base, Field, List, Lazy)):
                     if not isinstance(v, Lazy): self.__keys__.add(unicode(k))
                     v.__kwargs__["parent"] = p
                     v.__kwargs__['name'] = k
