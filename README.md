@@ -31,6 +31,7 @@
     * Plugins
     * Implement depends_on for validation
     * Implement DBKey
+    * List validation (len and multiple types)
 
 #### Usage
 
