@@ -317,6 +317,10 @@ class Document(unittest.TestCase):
         dic = obj.find_one({"_id":_id}, as_dict=True)
         dic.get("em")
 
+    def test_empty(self):
+        obj = objects.BadHuman()
+        with self.assertRaises(orm.DocumentException) as cm:
+            obj.save()
 
     def test_repr(self):
         print unicode(self.obj)
@@ -409,9 +413,10 @@ class Document(unittest.TestCase):
         
         obj2 = objects.BadHuman()
         obj2.name = "Test"
-        _id = obj2.save()
-        self.assertEqual(_id, False)
-
+        with self.assertRaises(Exception) as cm:
+            _id = obj2.save()
+        
+        obj.__class__.__remove__()
         obj3 = objects.BadHuman()
         obj3.name = "Test"
         obj3.save()
@@ -420,8 +425,9 @@ class Document(unittest.TestCase):
         obj4.name = "Tester"
         obj4.save()
         obj4.name = "Test"
-        _id2 = obj4.save()
-        self.assertEqual(_id2, False)
+        with self.assertRaises(Exception) as cm:
+            _id2 = obj4.save()
+        
         obj._coll.drop_indexes()
         
 

@@ -79,7 +79,7 @@ class Field(object):
 
     def _clean(self, val, dirty=None, doc=None):
         self._error = None
-        if val in EMPTY and self._required: raise FieldException("Required Field")
+        self._isrequired(val)
         val = self._widget(self).clean(val, doc=doc) if self._widget else val
         val = self.clean(val, doc=doc)
         val = self._validate(self).validate(val, doc=doc) if self._validate else val 
@@ -88,6 +88,9 @@ class Field(object):
     
     def clean(self, val, doc=None): return val
     
+    def _isrequired(self, val):
+        if val in EMPTY and self._required: raise FieldException("Required Field")
+
     def _json(self):
         return self._value
     
@@ -98,8 +101,11 @@ class Field(object):
     
     def _errors(self, namespace):
         errors = {}
+        try:
+            self._isrequired(self._value)
+        except Exception as e:
+            self._error = e
         if self._error: errors[namespace] = self._error
-        #self._error = None
         return errors
     
     def _map(self, val, init=False, doc=None):
@@ -477,21 +483,13 @@ class Document(base):
             obj['__created__'] = self.__created__
             obj['__modified__']= self.__modified__
             obj['__active__'] = self.__active__
-            try:
-                self._id = self._coll.insert(obj, safe=True)
-            except Exception as e:
-                self.logger.exception(e) 
-                return False
-
-                
+            self._id = self._coll.insert(obj, safe=True)    
         else:
             obj = self._save()
             self.__modified__ = datetime.datetime.utcnow()
             obj['__modified__'] = self.__modified__
             up = {'$set':obj}
-            try:
-                self._coll.update({'_id':self._id}, up, safe=True)
-            except: return False
+            self._coll.update({'_id':self._id}, up, safe=True)
         return self._id
 
 class Index(object):
