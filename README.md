@@ -8,6 +8,9 @@
 * Full Test Suite (100% code coverage)
 * Exposes default MongoDB cursors 
 * Widget System
+* List validation (len and multiple types)
+* Different bson attribute names from model attributes via dbkey attribute
+* Dynamic Field Validation
 * Large Collection of Default Field Types
     * Char
     * Integer
@@ -29,9 +32,6 @@
 * TODO
     * Tutorials
     * Plugins
-    * Implement depends_on for validation
-    * Implement DBKey
-    * List validation (len and multiple types)
 
 #### Usage
 

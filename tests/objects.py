@@ -71,11 +71,22 @@ class Scion(Car):
 class Rodeo(Car):
     tires = orm.List(type=int)
 
+
+class StateValidator(orm.FieldValidator):
+
+    def validate(self, val, doc=None):
+        print "Test!"
+        print self.obj._base.__class__.__name__
+        if val and not self.obj._parent.country is "USA": raise field.FieldException("Country must be USA to have a state")
+        return val
+
 class BadHuman(Human):
     unique = field.Integer()
-    email = field.Email()
     phone = field.Phone()
+    email = field.Email(dbkey="em")
     car = field.ModelChoice(type=Car, widget=widget.Select, display=car_disp)
     active = field.Boolean(widget=widget.CheckBox)
+    state = field.Char(validate=StateValidator)
+    country = field.Char()
 
 Human.cars = orm.Lazy(type=Car, key='owner')
