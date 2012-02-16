@@ -9,7 +9,7 @@
 * Exposes default MongoDB cursors 
 * Widget System
 * List validation (len and multiple types)
-* Different bson attribute names from model attributes via dbkey attribute
+* Attribute aliases
 * Dynamic Field Validation
 * Large Collection of Default Field Types
     * Char
