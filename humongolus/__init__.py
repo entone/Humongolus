@@ -18,6 +18,14 @@ def import_class(kls):
         m = getattr(m, comp)            
     return m
 
+class FieldValidator(object):
+    obj = None
+
+    def __init__(self, obj):
+        self.obj = obj
+
+    def validate(self, val, doc=None):
+        return val
 
 class FieldException(Exception): pass
 class DocumentException(Exception): 
@@ -50,7 +58,10 @@ class Field(object):
     _error = None
     _dbkey = None
     _widget = None
+    _base = None
     _parent = None
+    _validate = None
+    _dbkey = None
     __kwargs__ = {}
     __args__ = ()
 
@@ -67,9 +78,11 @@ class Field(object):
         self._error = None
 
     def _clean(self, val, dirty=None, doc=None):
+        self._error = None
         if val in EMPTY and self._required: raise FieldException("Required Field")
-        val = self.clean(val, doc=None)
         val = self._widget(self).clean(val, doc=doc) if self._widget else val
+        val = self.clean(val, doc=doc)
+        val = self._validate(self).validate(val, doc=doc) if self._validate else val 
         self._dirty = self._value if not dirty else dirty
         self._value = val
     
@@ -86,6 +99,7 @@ class Field(object):
     def _errors(self, namespace):
         errors = {}
         if self._error: errors[namespace] = self._error
+        #self._error = None
         return errors
     
     def _map(self, val, init=False, doc=None):
@@ -112,9 +126,11 @@ class Lazy(object):
     _type = None
     _key = None
     _query = {}
+    _base = None
     _parent = None
     _name = None
     _widget = None
+    _dbkey = None
 
     def __init__(self, *args, **kwargs):
         self.logger = _settings.LOGGER
@@ -126,7 +142,7 @@ class Lazy(object):
     
     def __call__(self, **kwargs):
         q = kwargs.get('query', {})
-        q.update({self._key:self._parent._id})
+        q.update({self._key:self._base._id})
         self._query.update(q)
         return self._type.find(self._query)
 
@@ -154,9 +170,11 @@ class List(list):
     _type = None
     _length = None
     _dbkey = None
+    _base = None
     _parent = None
     _name = None
     _widget = None
+    _dbkey = None
     __kwargs__ = {}
     __args__ = ()
 
@@ -234,9 +252,11 @@ class List(list):
 class base(dict):
     logger = None
     _inited = False
+    _base = None
     _parent = None
     _name = None
     _widget = None
+    _dbkey = None
     __kwargs__ = {}
     __args__ = ()
     __keys__ = []
@@ -247,15 +267,16 @@ class base(dict):
         self.__kwargs__ = kwargs
         self.__args__ = args
         self._inited = False
-        p = kwargs.get("parent", None)
-        self._parent = p if p != self else None
+        b = kwargs.get("base", None)
+        self._base = b if b != self else None
         self.__keys__ = set()
         for cls in reversed(self.__class__._getbases()):
             for k,v in cls.__dict__.iteritems():
                 if isinstance(v, (base, Field, List, Lazy)):
                     if not isinstance(v, Lazy): self.__keys__.add(unicode(k))
-                    v.__kwargs__["parent"] = p
+                    v.__kwargs__["base"] = b
                     v.__kwargs__['name'] = k
+                    v.__kwargs__['parent'] = self
                     self.__dict__[k] = v.__class__(*v.__args__, **v.__kwargs__)
     
     def __setattr__(self, key, val):
@@ -294,8 +315,9 @@ class base(dict):
     def _save(self, namespace=None):
         obj = {}
         for k,v in self.__dict__.iteritems():
-            ns = ".".join([namespace, k]) if namespace else k
             try:
+                key = v._dbkey if v._dbkey else k
+                ns = ".".join([namespace, key]) if namespace else key
                 obj.update(v._save(namespace=ns))
             except Exception as e: pass 
         return obj
@@ -303,25 +325,29 @@ class base(dict):
     def _errors(self, namespace=None):
         errors = {}
         for k,v in self.__dict__.iteritems():
-            ns = ".".join([namespace, k]) if namespace else k
             try:
+                key = v._dbkey if v._dbkey else k
+                ns = ".".join([namespace, key]) if namespace else key
                 errors.update(v._errors(namespace=ns))
             except Exception as e: pass
         return errors
 
     def _map(self, vals, init=False, doc=None):
         self._inited = True
-        for k,v in vals.iteritems():
+        for k,v in self.__dict__.iteritems():
             try:
-                self.__dict__.get(k, None)._map(v, init=init, doc=doc)
+                key = v._dbkey if v._dbkey else k
+                val = vals[key]
+                v._map(val, init=init, doc=doc)
             except: pass
 
     def _json(self):
         obj = {}
         for k,v in self.__dict__.iteritems():
             try:
-                if not isinstance(v, Lazy): 
-                    obj[k] = v._json()
+                if not isinstance(v, Lazy):
+                    key = v._dbkey if v._dbkey else k 
+                    obj[key] = v._json()
             except: pass
         
         return obj
@@ -356,7 +382,7 @@ class Document(base):
     __hargskeys__ = None
 
     def __init__(self, *args, **kwargs):
-        kwargs['parent'] = self
+        kwargs['base'] = self
         super(Document, self).__init__(*args, **kwargs)
         self._id = None
         self.__hargs__ = {}

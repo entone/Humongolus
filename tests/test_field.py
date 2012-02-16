@@ -30,6 +30,15 @@ class Field(unittest.TestCase):
         self.job = objects.Job()
         self.location = objects.Location()
     
+    def test_validation(self):
+        obj = objects.BadHuman()
+        obj.state = "Illinois"
+        with self.assertRaises(orm.DocumentException) as cm:
+            obj.save()
+        
+        obj.country = "USA"
+        obj.state = "Illinois"
+
     def test_default(self):
         self.assertEqual(self.obj.genitalia, self.genitalia)
 
@@ -299,6 +308,15 @@ class Document(unittest.TestCase):
             ]
         }
     
+
+    def test_dbkey(self):
+        obj = objects.BadHuman()
+        obj.name = "Anne"
+        obj.email = "test@test.com"
+        _id = obj.save()
+        dic = obj.find_one({"_id":_id}, as_dict=True)
+        dic.get("em")
+
 
     def test_repr(self):
         print unicode(self.obj)
