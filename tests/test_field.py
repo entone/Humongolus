@@ -357,6 +357,13 @@ class Document(unittest.TestCase):
 
         print cm.exception
     
+    def test_list_length(self):
+        with self.assertRaises(Exception) as cm:
+            for i in xrange(5):
+                job = objects.Job()
+                job.title = "Engineer %s" % i
+                self.obj.jobs.append(job)
+    
     def test_bad_get(self):
         with self.assertRaises(AttributeError):
             self.obj._get("hoohaa")

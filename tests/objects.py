@@ -32,7 +32,7 @@ class Human(orm.Document):
     age = field.Integer(min=0, max=3000)
     height = field.Float(min=1, max=100000)
     weight = field.Float(min=1)
-    jobs = orm.List(type=Job)
+    jobs = orm.List(type=Job, length=3)
     genitalia = field.Char()
 
 class Female(Human):
