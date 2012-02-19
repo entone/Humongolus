@@ -114,6 +114,8 @@ print car.render(widget=CarDisplay, cls='test')
 #we've already passed the widget in with the model instantiation
 print chris._get("car").render(classes="Woot")
 
+print "\r\n".join(chris.render(widget=widget.Form, action='/save_person', id=str(chris._id)))
+
 
 
 
