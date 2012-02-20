@@ -1,5 +1,7 @@
 ### ORM and Persistence Framework for Python and MongoDB
 
+Google Group: http://groups.google.com/group/humongolus
+
 #### Features
 * Type Validation
 * Lazy Relationships
