@@ -1,3 +1,4 @@
+import copy
 from humongolus import Widget, Field, Document, EmbeddedDocument, Lazy, List, DocumentException
 
 class HTMLElement(Widget):
@@ -50,8 +51,9 @@ class FormField(object):
     _widget = None
     _label = None
     _cls = None
-    _name = None
+    _object = None
     __kwargs__ = {}
+    __allkwargs__ = {}
     
     def __init__(self, **kwargs):
         for k,v in kwargs.iteritems():
@@ -59,9 +61,19 @@ class FormField(object):
                 setattr(self, "_%s" % k, v)
             except: pass
         
-        kwargs.pop("name", None)
+        self.__allkwargs__ = copy.copy(kwargs)
         kwargs.pop("widget", None)
         self.__kwargs__ = kwargs
+    
+    def render(self, *args, **kwargs):
+        try:
+            ren = self._object.render(*args, **kwargs)
+            try:
+                return "".join(ren)
+            except Exception as e:
+                return ren
+        except:
+            pass
 
 
 class FormElement(Widget):
@@ -69,6 +81,17 @@ class FormElement(Widget):
     _id = ""
     _name = ""
     _cls = ""
+
+    def __init__(self, *args, **kwargs):
+        super(FormElement, self).__init__(*args, **kwargs)
+        if not self._object is None:
+            for k,v in self.__class__._getfields().iteritems():
+                if isinstance(v, FormField):
+                    n_obj = v.__class__(**v.__allkwargs__)
+                    obj = self._object.__dict__[k]
+                    obj._widget = n_obj._widget if n_obj._widget else obj._widget
+                    n_obj._object = obj
+                    self.__dict__[k] = n_obj
 
     @classmethod
     def _getfields(cls):
@@ -120,6 +143,13 @@ class FormElement(Widget):
                 return a
             else:
                 return obj.render(namespace=namespace, **kwargs)
+    
+    def __iter__(self):
+        for fi in self._fields:
+            v = self.__dict__[fi]
+            yield v
+    
+
 
 class FieldSet(FormElement):
 
@@ -149,6 +179,7 @@ class Form(FormElement):
     _method = "POST"
     _type = "multipart/form"
     _data = None
+    errors = {}
         
     def render(self):
         parts = []
@@ -184,7 +215,9 @@ class Form(FormElement):
             obj = self.parse_data(self._data)
             self._object._map(obj)
             errors = self._object._errors()
-            if len(errors.keys()): raise DocumentException(errors=errors)
+            if len(errors.keys()): 
+                self.errors = errors
+                raise DocumentException(errors=errors)
 
 
     def submit(self):

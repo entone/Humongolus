@@ -47,7 +47,7 @@ class Human(orm.Document):
     _collection = "humans"
     human_id = field.AutoIncrement(collection="human")
     name = field.Char(required=True, min=2, max=25)
-    age = field.Integer(min=0, max=3000)
+    age = field.Integer(required=True, min=0, max=3000)
     height = field.Float(min=1, max=100000)
     weight = field.Float(min=1, max=30000)
     jobs = orm.List(type=Job)
@@ -81,6 +81,7 @@ chris.height = 100
 chris.weight = 180
 chris.location.city = "Chicago"
 chris.location.state = "IL"
+chris.location.address.zip = 60626
 
 job = Job()
 job.employer = "Entropealabs"
@@ -153,25 +154,30 @@ class PersonForm(widget.Form):
     location = widget.FormField(widget=LocationForm, label="Location")
 
 submit = {
-    "name":"C",
+    "name":"None",
     "human_id":"32226",
-    "age":"31",
+    "age":None,
     "weight":"175",
     "car":"ffed81a42000002",
     "location-city":"Chicago",
     "location-state":"IL",
     "location-address-street":"549 Randolph",
     "location-address-street2":"450",
-    "location-address-zip":"60626"
+    #"location-address-zip":"60626"
 }
 
-
 form = PersonForm(obj=chris, data=submit)
+
+for f in form:
+    print f.render(cls="popup")
+
+print form.car.render(cls="try-this")
 
 print form.render()
 try:
     form.validate()
 except orm.DocumentException as e:
+    print form.errors
     print e.errors
 
 
