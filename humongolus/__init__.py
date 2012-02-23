@@ -37,8 +37,12 @@ class DocumentException(Exception):
 class Widget(object):
     _object = None
 
-    def __init__(self, obj):
+    def __init__(self, obj, **kwargs):
         self._object = obj
+        for k,v in kwargs.iteritems():
+            try:
+                setattr(self, "_%s" % k, v)
+            except: pass
     
     def clean(self, val, doc=None):
         return val
@@ -71,7 +75,9 @@ class Field(object):
         self.__kwargs__ = kwargs
         self.__args__ = args
         for k,v in kwargs.iteritems():
-            if hasattr(self, "_%s" % k): setattr(self, "_%s" % k, v)
+            try:
+                setattr(self, "_%s" % k, v)
+            except: pass
         
         self._dirty = self.clean(self._default, doc=None) if self._default else None
         self._value = self.clean(self._default, doc=None) if self._default else None
@@ -109,8 +115,11 @@ class Field(object):
         return errors
     
     def _map(self, val, init=False, doc=None):
-        if init: self._clean(val, dirty=val, doc=doc)
-        else: self._clean(val, doc=doc)
+        try:
+            if init: self._clean(val, dirty=val, doc=doc)
+            else: self._clean(val, doc=doc)
+        except Exception as e:
+            self._error = e
     
     def render(self, *args, **kwargs):
         self._widget = kwargs.get("widget", self._widget)
@@ -143,7 +152,9 @@ class Lazy(object):
         self.__args__ = args
         self.__kwargs__ = kwargs
         for k,v in kwargs.iteritems():
-            if hasattr(self, "_%s" % k): setattr(self, "_%s" % k, v)
+            try:
+                setattr(self, "_%s" % k, v)
+            except: pass
 
     
     def __call__(self, **kwargs):
@@ -190,7 +201,9 @@ class List(list):
         self.__kwargs__ = kwargs
         self.__args__ = args
         for k,v in kwargs.iteritems():
-            if hasattr(self, "_%s" % k): setattr(self, "_%s" % k, v)
+            try:
+                setattr(self, "_%s" % k, v)
+            except: pass
         
 
     def append(self, obj):
@@ -307,7 +320,7 @@ class base(dict):
         for i in cls.__bases__:
             b.append(i)
             try:
-                b.extend(i.__getbases__())
+                b.extend(i._getbases())
             except:pass
         return b
     

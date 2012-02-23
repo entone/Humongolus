@@ -14,13 +14,6 @@ logger = logging.getLogger("humongolus")
 
 orm.settings(logger=logger, db_connection=conn)
 
-class Widget(unittest.TestCase):
-
-    def test_render(self):
-        anne = objects.Female()
-        anne.name = "Anne"
-        print anne._get("name").render()
-
 class Field(unittest.TestCase):
 
     def setUp(self):
@@ -105,7 +98,10 @@ class Field(unittest.TestCase):
         self.assertEqual(obj.human_id, new_val)
         n = "%s%s" % (self.name, new_val)
         obj.name = n
-        obj.save()
+        try:
+            obj.save()
+        except Exception as e:
+            print e
         n_obj = objects.Female(id=_id)
         self.assertEqual(n_obj.human_id, new_val)
         self.assertEqual(n_obj.name, n)
@@ -485,8 +481,8 @@ class Widget(unittest.TestCase):
         self.car.make = "Isuzu"
         self.car.model = "Rodeo"
         self.car.year = datetime.datetime(2007, 1, 1)
-        self.text_html= "<input type='text' name='make' value='Isuzu' class='red checked'  />"
-        self.choice_html = "<select name='car' classes='Woot'><option value='%s'>Isuzu Rodeo 2007-01-01 00:00:00</option></select>"
+        self.text_html= "<input type='text' id='id_make' name='make' value='Isuzu' class='red checked'  />"
+        self.choice_html = "<select id='id_car' name='car' class='Woot'><option value='%s'>Isuzu Rodeo 2007-01-01 00:00:00</option></select>"
         self.object_html = """<ul class='test'>
                     <li>Make: Isuzu</li>
                     <li>Model: Rodeo</li>
@@ -494,15 +490,20 @@ class Widget(unittest.TestCase):
                 </ul>"""
     
 
+    def test_render(self):
+        anne = objects.Female()
+        anne.name = "Anne"
+        print anne._get("name").render()
+
     def test_input_render(self):
-        text = self.car._get("make").render(widget=widget.Input, classes="red checked")
+        text = self.car._get("make").render(widget=widget.Input, cls="red checked")
         self.assertEqual(text.strip(), self.text_html.strip())
     
     def test_choice_render(self):
         _id = self.car.save()
         select = self.choice_html % str(_id)
         obj = objects.BadHuman()
-        text = obj._get("car").render(classes="Woot")
+        text = obj._get("car").render(cls="Woot")
         self.assertEqual(text.strip(), select.strip())
 
     def test_object_render(self):

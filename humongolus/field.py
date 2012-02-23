@@ -46,10 +46,11 @@ class Integer(Char):
     _display="integer"
 
     def clean(self, val, doc=None):
-        try:            
-            val = self._type(val)
-            if self._max != None and val > self._max: raise MaxException("must be less than %s" % self._max)
-            if self._min != None and val < self._min: raise MinException("must be greater than %s" % self._min)
+        try:
+            if val:
+                val = self._type(val)
+                if self._max != None and val > self._max: raise MaxException("must be less than %s" % self._max)
+                if self._min != None and val < self._min: raise MinException("must be greater than %s" % self._min)
             return val
         except FieldException as e: raise e
         except: raise FieldException("%s is not a valid %s" % (val, self._display))

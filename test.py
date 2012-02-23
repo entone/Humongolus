@@ -26,9 +26,16 @@ class Car(orm.Document):
 
 Car.__remove__()
 
+class Address(orm.EmbeddedDocument):
+    street = field.Char()
+    street2 = field.Char()
+    zip = field.Char()
+
+
 class Location(orm.EmbeddedDocument):
     city = field.Char(required=True)
     state = field.Char()
+    address = Address()
 
 class Job(orm.EmbeddedDocument):
     employer = field.Char()
@@ -45,6 +52,7 @@ class Human(orm.Document):
     weight = field.Float(min=1, max=30000)
     jobs = orm.List(type=Job)
     genitalia = field.Char()
+    location = Location()
     car = field.ModelChoice(type=Car, widget=widget.Select, display=car_disp)
 
 class Female(Human):
@@ -71,6 +79,8 @@ chris.name = "Chris"
 chris.age = 31
 chris.height = 100
 chris.weight = 180
+chris.location.city = "Chicago"
+chris.location.state = "IL"
 
 job = Job()
 job.employer = "Entropealabs"
@@ -107,14 +117,63 @@ c_id = car2.save()
 
 print car._get("owner")().name
 
-print car._get("make").render(widget=widget.Input, classes="red checked")
+print car._get("make").render(widget=widget.Input, cls="red checked")
 
 print car.render(widget=CarDisplay, cls='test')
 
 #we've already passed the widget in with the model instantiation
-print chris._get("car").render(classes="Woot")
+print chris._get("car").render(cls="Woot")
 
-print "\r\n".join(chris.render(widget=widget.Form, action='/save_person', id=str(chris._id)))
+
+class AddressForm(widget.FieldSet):
+    _fields = ["street", "street2", "zip"]
+
+    street = widget.FormField(widget=widget.Input)
+    street2 = widget.FormField(widget=widget.Input)
+    zip = widget.FormField(widget=widget.Input)
+
+class LocationForm(widget.FieldSet):
+    _fields = ["city", "state", "address"]
+    _cls = "location"
+
+    city = widget.FormField(widget=widget.Input)
+    state = widget.FormField(widget=widget.Input)
+    address = widget.FormField(widget=AddressForm)
+
+class PersonForm(widget.Form):
+    _action = '/save_person'
+    _id = "person_%s" % chris._id
+    #if anyone knows a better way to maintain the order of the fields, please let me know!
+    _fields = ["human_id", "name", "age", "car", "location"]
+
+    human_id = widget.FormField(widget=widget.Input, label="ID")
+    name = widget.FormField(widget=widget.Input, label="Name")
+    age = widget.FormField(widget=widget.Input, label="Age")
+    car = widget.FormField(label="Car")
+    location = widget.FormField(widget=LocationForm, label="Location")
+
+submit = {
+    "name":"C",
+    "human_id":"32226",
+    "age":"31",
+    "weight":"175",
+    "car":"ffed81a42000002",
+    "location-city":"Chicago",
+    "location-state":"IL",
+    "location-address-street":"549 Randolph",
+    "location-address-street2":"450",
+    "location-address-zip":"60626"
+}
+
+
+form = PersonForm(obj=chris, data=submit)
+
+print form.render()
+try:
+    form.validate()
+except orm.DocumentException as e:
+    print e.errors
+
 
 
 
