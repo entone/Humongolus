@@ -149,7 +149,7 @@ class PersonForm(widget.Form):
 
     human_id = widget.FormField(widget=widget.Input, label="ID")
     name = widget.FormField(widget=widget.Input, label="Name")
-    age = widget.FormField(widget=widget.Input, label="Age")
+    age = widget.FormField(widget=widget.Input, label="Age", description="This is today minus the date you were born in seconds.")
     car = widget.FormField(label="Car")
     location = widget.FormField(widget=LocationForm, label="Location")
 
@@ -174,9 +174,16 @@ for f in form:
 print form.car.render(cls="try-this")
 
 print form.render()
+
 try:
     form.validate()
 except orm.DocumentException as e:
+    for f in form:
+        if f.errors:
+            print f.name
+            if f.description: print f.description
+            print f.errors
+    
     print form.errors
     print e.errors
 

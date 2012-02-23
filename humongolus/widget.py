@@ -51,11 +51,15 @@ class FormField(object):
     _widget = None
     _label = None
     _cls = None
+    _description = None
     _object = None
+    _errors = []
     __kwargs__ = {}
     __allkwargs__ = {}
     
     def __init__(self, **kwargs):
+        self._errors = []
+        self._description = None
         for k,v in kwargs.iteritems():
             try:
                 setattr(self, "_%s" % k, v)
@@ -64,6 +68,17 @@ class FormField(object):
         self.__allkwargs__ = copy.copy(kwargs)
         kwargs.pop("widget", None)
         self.__kwargs__ = kwargs
+    
+    def __getattr__(self, key):
+        try:
+            return self.__dict__["_%s"%key]
+        except:
+            try:
+                return self._object.__dict__["_%s"%key]
+            except:
+                raise AttributeError("Invalid attribute: %s" % key)
+        
+        raise AttributeError("Invalid attribute: %s" % key)
     
     def render(self, *args, **kwargs):
         try:
@@ -148,6 +163,7 @@ class FormElement(Widget):
         for fi in self._fields:
             v = self.__dict__[fi]
             yield v
+
     
 
 
@@ -215,7 +231,9 @@ class Form(FormElement):
             obj = self.parse_data(self._data)
             self._object._map(obj)
             errors = self._object._errors()
-            if len(errors.keys()): 
+            if len(errors.keys()):
+                for k,v in errors.iteritems():
+                    self.__dict__[k].errors.append(v)
                 self.errors = errors
                 raise DocumentException(errors=errors)
 
