@@ -74,7 +74,7 @@ class FormField(object):
             return self.__dict__["_%s"%key]
         except:
             try:
-                return self._object.__dict__["_%s"%key]
+                return getattr(self._object, "_%s"%key)
             except:
                 raise AttributeError("Invalid attribute: %s" % key)
         
@@ -89,6 +89,9 @@ class FormField(object):
                 return ren
         except:
             pass
+    
+    def label(self):
+        return "<label for='%s'>%s</label>" % (self.name, self._label)
 
 
 class FormElement(Widget):

@@ -169,6 +169,7 @@ submit = {
 form = PersonForm(obj=chris, data=submit)
 
 for f in form:
+    print f.label()
     print f.render(cls="popup")
 
 print form.car.render(cls="try-this")
