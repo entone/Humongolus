@@ -10,6 +10,7 @@ Google Group: http://groups.google.com/group/humongolus
 * Full Test Suite (100% code coverage)
 * Exposes default MongoDB cursors 
 * Widget System
+* Robust HTML Form Handling (rendering and validation)
 * List validation (len and multiple types)
 * Attribute aliases
 * Dynamic Field Validation
