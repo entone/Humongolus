@@ -134,8 +134,7 @@ class FormElement(Widget):
                 obj = self._object.__dict__.get(name, None)
                 ns = "-".join([namespace, name]) if namespace else name
                 parts.extend(self.render_child(obj, widget, ns, **i.__kwargs__))
-            except Exception as e: 
-                print e
+            except Exception as e:
                 pass
         
         return parts
@@ -144,23 +143,13 @@ class FormElement(Widget):
         return "<label for='%s'>%s</label>" % (name, label)
 
     def render_child(self, obj, widget, namespace, **kwargs):
-        if widget:
-            if isinstance(obj, Field):
-                label = kwargs.get("label", None)
-                a = [self.render_label(namespace, label)] if label else []
-                a.append(obj.render(widget=widget, namespace=namespace, **kwargs))
-                return a
-            else:
-                return obj.render(widget=widget, namespace=namespace, **kwargs)
-
+        if isinstance(obj, Field):
+            label = kwargs.get("label", None)
+            a = [self.render_label(namespace, label)] if label else []
+            a.append(obj.render(widget=widget, namespace=namespace, **kwargs))
+            return a
         else:
-            if isinstance(obj, Field):
-                label = kwargs.get("label", None)
-                a = [self.render_label(namespace, label)] if label else []
-                a.append(obj.render(namespace=namespace, **kwargs))
-                return a
-            else:
-                return obj.render(namespace=namespace, **kwargs)
+            return obj.render(widget=widget, namespace=namespace, **kwargs)
     
     def __iter__(self):
         for fi in self._fields:
@@ -190,7 +179,6 @@ class FieldSet(FormElement):
         parts.extend(self.render_fields(namespace=ns))
         parts.append("</fieldset>")
         return parts
-
 
 class Form(FormElement):
     #Attributes

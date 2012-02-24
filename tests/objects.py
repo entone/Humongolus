@@ -63,6 +63,7 @@ class CarDisplay(orm.Widget):
 
 class Scion(Car):
     any_owner = field.DynamicDocument()
+    color = field.Choice(choices=["Red", "Blue", "Green"])
     make = field.Char(default="Scion")
     model = field.Char(default="xA")
     year = field.Date(default=datetime.datetime(2007, 1, 1))
@@ -80,6 +81,9 @@ class StateValidator(orm.FieldValidator):
         if val and not self.obj._parent.country is "USA": raise field.FieldException("Country must be USA to have a state")
         return val
 
+class Loca(orm.EmbeddedDocument):
+    city = field.Char()
+
 class BadHuman(Human):
     unique = field.Integer()
     phone = field.Phone()
@@ -87,6 +91,32 @@ class BadHuman(Human):
     car = field.ModelChoice(type=Car, widget=widget.Select, display=car_disp)
     active = field.Boolean(widget=widget.CheckBox)
     state = field.Char(validate=StateValidator)
-    country = field.Char()
+    country = field.Char(validate=orm.FieldValidator)
+    location = Loca()
 
 Human.cars = orm.Lazy(type=Car, key='owner')
+
+
+class AddressForm(widget.FieldSet):
+    _fields = ["street", "street2", "zip"]
+
+    street = widget.FormField(widget=widget.Input)
+    street2 = widget.FormField(widget=widget.Input)
+    zip = widget.FormField(widget=widget.Input)
+
+class LocationForm(widget.FieldSet):
+    _fields = ["city"]
+    _cls = "location"
+
+    city = widget.FormField(widget=widget.Input)
+
+class PersonForm(widget.Form):
+    _action = '/save_person'
+    _id = "person_woot"
+    #if anyone knows a better way to maintain the order of the fields, please let me know!
+    _fields = ["human_id", "name", "age", "location"]
+
+    human_id = widget.FormField(widget=widget.Input, label="ID")
+    name = widget.FormField(widget=widget.Input, label="Name")
+    age = widget.FormField(widget=widget.Input, label="Age", description="This is today minus the date you were born in seconds.")
+    location = widget.FormField(widget=LocationForm, label="Location")

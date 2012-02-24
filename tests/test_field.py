@@ -115,6 +115,15 @@ class Field(unittest.TestCase):
         n_scion = objects.Scion(id=s_id)
         p = n_scion._get("any_owner")()
         self.assertEqual(p._id, _id)
+        car3 = objects.Scion()
+        car3.any_owner = objects.Female()
+        with self.assertRaises(orm.DocumentException) as cm:
+            car3.save()
+            print cm.exception.errors
+        
+        with self.assertRaises(Exception) as cm:
+            car3._get("any_owner")()
+
     
     def compare_date(self, date1, date2):
         #mongo doesn't support the same date precision as python, gotta chop off a few microseconds
@@ -135,7 +144,10 @@ class Field(unittest.TestCase):
         _id = obj.save()
         obj2 = objects.Scion(id=_id)
         self.compare_date(now, obj2.year)
-
+    
+    def test_choice(self):
+        car = objects.Scion()
+        car.color = "Red"
 
     def test_document_id(self):
         self.obj.name = self.name
@@ -151,7 +163,11 @@ class Field(unittest.TestCase):
         car2 = objects.Scion(id=_id)
         human = car2._get("owner")()
         self.assertEqual(human._id, h_id)
-    
+        car3 = objects.Scion()
+        car3.owner = objects.Female()
+        with self.assertRaises(orm.DocumentException) as cm:
+            car3.save()
+            print cm.exception.errors
 
     def test_render(self):
         self.obj.name = self.name
@@ -521,3 +537,32 @@ class Widget(unittest.TestCase):
         print checked
         correct = checked.index("CHECKED")
         self.assertGreater(correct, -1)
+
+class Form(unittest.TestCase):
+
+    def setUp(self):
+        self.obj = objects.BadHuman()
+        self.obj.name = "Anne"
+        self.obj.age = 27
+        self.obj.height = 65
+        self.obj.weight = 120
+        self.submit = {
+            "name":"",
+            "human_id":"32226",
+            "age":None,
+            "weight":"175",
+            "location-city":"Chicago",
+            "location-state":"IL"
+        }
+    
+    def test_form(self):
+        form = objects.PersonForm(obj=self.obj, data=self.submit)
+        form.render()
+        with self.assertRaises(orm.DocumentException) as e:
+            form.validate()
+    
+    def test_iterator(self):
+        form = objects.PersonForm(obj=self.obj, data=self.submit)
+        for f in form:
+            print f.label()
+            print f.render(cls="popup")
