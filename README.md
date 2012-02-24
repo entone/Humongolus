@@ -7,7 +7,7 @@ Google Group: http://groups.google.com/group/humongolus
 * Lazy Relationships
 * Full MongoDB Index Support
 * Dirty Updating (only send changes to db)
-* Full Test Suite (95% code coverage)
+* Full Test Suite (97% code coverage)
 * Exposes default MongoDB cursors 
 * HTML Widget System
 * Robust HTML Form Handling (rendering and validation)
@@ -29,6 +29,7 @@ Google Group: http://groups.google.com/group/humongolus
     * Email
     * Phone
     * Choice Fields (Model, Collection and List)
+    * File
 * Endless EmbeddedDocuments
 * Default Created/Modified attributes
 * Easily integrates with Backbone.js or other client side frameworks
