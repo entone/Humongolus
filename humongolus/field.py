@@ -2,6 +2,7 @@ import datetime
 import re
 from humongolus import Field, FieldException, Document, import_class
 from pymongo.objectid import ObjectId
+from gridfs import GridFS
 
 class MinException(FieldException): pass
 class MaxException(FieldException): pass
@@ -206,3 +207,42 @@ class Phone(Char):
         try:
             return parse_phone(val)
         except: raise FieldException("%s is not a valid format" % val)
+
+class File(DocumentId):
+    _database = None
+    _collection = "fs"
+    _args = {}
+
+    def clean(self, val, doc=None):
+        if not self._database: raise FieldException("database is required")
+        if isinstance(val, ObjectId): return val
+        try:
+            f = GridFS(self._database, collection=self._collection)
+            self._args["filename"] = self._args.get("filename", self._name)
+            return f.put(val, **self._args)
+        except Exception as e:
+            raise FieldException(e.message)
+
+    def exists(self):
+        f = GridFS(self._database, collection=self._collection)
+        return f.exists(self._value)
+
+    def delete(self):
+        f = GridFS(self._database, collection=self._collection)
+        return f.delete(self._value)
+
+    def __call__(self):
+        if isinstance(self._value, ObjectId):
+            f = GridFS(self._database, collection=self._collection)
+            return f.get(self._value)
+        else:
+            raise FieldException("No file associated")
+
+    def __getattr__(self, key):
+        f = GridFS(self._database, collection=self._collection)
+        return getattr(f, key)
+
+
+
+
+

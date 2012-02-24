@@ -2,6 +2,7 @@ import humongolus as orm
 import datetime
 import humongolus.field as field
 import humongolus.widget as widget
+from pymongo.connection import Connection
 
 def car_disp(car):
     return {"value":car._id, "display":"%s %s %s" % (car.make, car.model, car.year)}
@@ -93,6 +94,7 @@ class BadHuman(Human):
     state = field.Char(validate=StateValidator)
     country = field.Char(validate=orm.FieldValidator)
     location = Loca()
+    avatar = field.File(database=Connection().avatars)
 
 Human.cars = orm.Lazy(type=Car, key='owner')
 

@@ -1,6 +1,7 @@
 import unittest
 import datetime
 import objects
+import os
 from pymongo.connection import Connection
 import logging
 import humongolus as orm
@@ -237,6 +238,32 @@ class Field(unittest.TestCase):
 
         obj.email = "test@test.com"
         self.assertEqual(obj.email, "test@test.com")
+
+    def test_file(self):
+        obj = objects.BadHuman()
+        obj.name = "Anne"
+        path = os.path.dirname(__file__)
+        print path
+        obj.avatar = file("%s/%s" % (path, "penguin.jpg"))
+        f_id = obj.avatar
+        self.assertEqual(obj._get("avatar").exists(), True)
+        _id = obj.save()
+        o = objects.BadHuman(id=_id)
+        self.assertEqual(o.avatar, f_id)
+        print o._get("avatar")()
+        print o._get("avatar").list()
+        print o._get("avatar").delete()
+        self.assertEqual(obj._get("avatar").exists(), False)
+        obj2 = objects.BadHuman()
+        with self.assertRaises(FieldException) as cm:
+            obj2._get("avatar")()
+
+        obj2.name = "Anne"
+        obj2.avatar = objects.BadHuman()
+        with self.assertRaises(orm.DocumentException) as cm:
+            obj2.save()
+            print cm.exception.errors
+
 
     def tearDown(self):
         self.obj.__class__.__remove__()
