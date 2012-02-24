@@ -7,9 +7,9 @@ Google Group: http://groups.google.com/group/humongolus
 * Lazy Relationships
 * Full MongoDB Index Support
 * Dirty Updating (only send changes to db)
-* Full Test Suite (100% code coverage)
+* Full Test Suite (95% code coverage)
 * Exposes default MongoDB cursors 
-* Widget System
+* HTML Widget System
 * Robust HTML Form Handling (rendering and validation)
 * List validation (len and multiple types)
 * Attribute aliases
