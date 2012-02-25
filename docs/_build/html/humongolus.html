@@ -1,0 +1,667 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>humongolus Package &mdash; Humongolus 0 documentation</title>
+    
+    <link rel="stylesheet" href="_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '',
+        VERSION:     '0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="top" title="Humongolus 0 documentation" href="index.html" />
+    <link rel="prev" title="Welcome to humongolus’s documentation!" href="index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to humongolus’s documentation!"
+             accesskey="P">previous</a> |</li>
+        <li><a href="index.html">Humongolus 0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="humongolus-package">
+<h1>humongolus Package<a class="headerlink" href="#humongolus-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="id1">
+<h2><tt class="xref py py-mod docutils literal"><span class="pre">humongolus</span></tt> Package<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
+<span class="target" id="module-humongolus.__init__"></span><p>Humongolus is a Persistence and Widget Framework for MongoDB written in Python</p>
+<dl class="class">
+<dt id="humongolus.__init__.Document">
+<em class="property">class </em><tt class="descclassname">humongolus.__init__.</tt><tt class="descname">Document</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/humongolus/__init__.html#Document"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.__init__.Document" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">humongolus.__init__.base</span></tt></p>
+<p>Base class for all first level documents. This will contain the _id and has the &#8220;save&#8221; method.</p>
+<p>All models should extend this class.</p>
+<p>When extending always set _db and _collection. These tell humongolus where to save and find it&#8217;s documents.</p>
+<p>_indexes is used to set the mongo indexes, it should be an array of :class: <cite>~Index</cite> objects</p>
+<dl class="attribute">
+<dt id="humongolus.__init__.Document.active">
+<tt class="descname">active</tt><a class="reference internal" href="_modules/humongolus/__init__.html#Document.active"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.__init__.Document.active" title="Permalink to this definition">¶</a></dt>
+<dd><p>is document active: Boolean</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="humongolus.__init__.Document.created">
+<tt class="descname">created</tt><a class="reference internal" href="_modules/humongolus/__init__.html#Document.created"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.__init__.Document.created" title="Permalink to this definition">¶</a></dt>
+<dd><p>created date of document: datetime</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="humongolus.__init__.Document.find">
+<em class="property">classmethod </em><tt class="descname">find</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/humongolus/__init__.html#Document.find"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.__init__.Document.find" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns pymongo cursor that yields instantiated Document objects of the Class type.
+:Parameters:</p>
+<blockquote>
+<div><ul class="simple">
+<li><cite>*args</cite>: passed directly to Connection.find()</li>
+<li><cite>**kwargs</cite>: passed directly to Connection.find()</li>
+</ul>
+</div></blockquote>
+<p>extra kwargs paramter is as_dict this will return the raw dictionary from mongo, this also allows you to use the &#8220;fields&#8221; parameter</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="humongolus.__init__.Document.find_one">
+<em class="property">classmethod </em><tt class="descname">find_one</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/humongolus/__init__.html#Document.find_one"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.__init__.Document.find_one" title="Permalink to this definition">¶</a></dt>
+<dd><p>returns single instantiated Document object of the Class type.
+:Parameters:
+- <cite>*args</cite>: passed directly to Connection.find_one()
+- <cite>**kwargs</cite>: passed directly to Connection.find_one()</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="humongolus.__init__.Document.json">
+<tt class="descname">json</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/humongolus/__init__.html#Document.json"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.__init__.Document.json" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return json representation of itself.</p>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="humongolus.__init__.Document.modified">
+<tt class="descname">modified</tt><a class="reference internal" href="_modules/humongolus/__init__.html#Document.modified"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.__init__.Document.modified" title="Permalink to this definition">¶</a></dt>
+<dd><p>return last modify date of document. updated after every successful save: datetime</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="humongolus.__init__.Document.remove">
+<tt class="descname">remove</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/humongolus/__init__.html#Document.remove"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.__init__.Document.remove" title="Permalink to this definition">¶</a></dt>
+<dd><p>Remove document. Calls .remove on pymongo Connection</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="humongolus.__init__.Document.save">
+<tt class="descname">save</tt><big>(</big><big>)</big><a class="reference internal" href="_modules/humongolus/__init__.html#Document.save"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.__init__.Document.save" title="Permalink to this definition">¶</a></dt>
+<dd><p>use this method to write a new object to the database or to save en existing document after updating.</p>
+<p>if the document already exists it will send an atomic update of only the changed attributes to mongo.</p>
+<p>always uses safe=True</p>
+<p>will raise a DocumentException if there are errors from validation, will also throw a pymongo Exception if insert or update fails.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="humongolus.__init__.Document.update">
+<tt class="descname">update</tt><big>(</big><em>update</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/humongolus/__init__.html#Document.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.__init__.Document.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update itself. Allows for custom saving, ie; not using safe=True</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="humongolus.__init__.Field">
+<em class="property">class </em><tt class="descclassname">humongolus.__init__.</tt><tt class="descname">Field</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/humongolus/__init__.html#Field"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.__init__.Field" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Base class for all Field types</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><ul class="first last simple">
+<li><cite>name</cite>: when used in a Model, this will be the attribute name, optional</li>
+<li><cite>default</cite>: default value, optional</li>
+<li><cite>required</cite>: whether or not the field is required, optional default to False</li>
+<li><cite>display</cite>: value for display purposes, this is used for labels when using the :class: <cite>~widget.Form</cite> widget, optional</li>
+<li><cite>dbkey</cite>: if the field name in the mongodb document is different then the Models attribute name, use this to indicate the mongo attribute name</li>
+<li><cite>widget</cite>: :class: <cite>~Widget</cite> to use for rendering, also assignable when creating a form, optional</li>
+<li><cite>validate</cite>: an instance :class: <cite>~FieldValidator</cite> for custom validation</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="humongolus.__init__.Field.clean">
+<tt class="descname">clean</tt><big>(</big><em>val</em>, <em>doc=None</em><big>)</big><a class="reference internal" href="_modules/humongolus/__init__.html#Field.clean"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.__init__.Field.clean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override to apply custom parsing of incoming value. 
+This is called anytime you set the value of a Field.
+Should always return the &#8220;cleaned&#8221; value or raise a FieldException on error</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><ul class="first last simple">
+<li><cite>val</cite>: incoming value from a form or other assignment</li>
+<li><cite>doc</cite>: a dictionary available if using the :class: <cite>~Form</cite> system. The dictionary will contain all keys passed to the :class: <cite>~Form</cite> object on instantiation</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="humongolus.__init__.Field.logger">
+<tt class="descname">logger</tt><em class="property"> = None</em><a class="headerlink" href="#humongolus.__init__.Field.logger" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="humongolus.__init__.Field.render">
+<tt class="descname">render</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/humongolus/__init__.html#Field.render"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.__init__.Field.render" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override to customize output</p>
+<p>The default returns the fields value unless a widget is available then calls render on the widget.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="humongolus.__init__.Widget">
+<em class="property">class </em><tt class="descclassname">humongolus.__init__.</tt><tt class="descname">Widget</tt><big>(</big><em>obj</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/humongolus/__init__.html#Widget"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.__init__.Widget" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Base class for all widgets</p>
+<p>When extending this class any variables beginning with _ are able to be set with kwargs when instanting</p>
+<dl class="method">
+<dt id="humongolus.__init__.Widget.clean">
+<tt class="descname">clean</tt><big>(</big><em>val</em>, <em>doc=None</em><big>)</big><a class="reference internal" href="_modules/humongolus/__init__.html#Widget.clean"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.__init__.Widget.clean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override to apply custom parsing of form data. 
+This is called anytime you set the value of a Field.
+Should always return the &#8220;cleaned&#8221; value or raise a FieldException on error</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><ul class="first last simple">
+<li><cite>val</cite>: incoming value from a form or other assignment</li>
+<li><cite>doc</cite>: a dictionary available if using the Form system. The dictionary will contain all keys passed to the Form object on instantiation</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="humongolus.__init__.Widget.render">
+<tt class="descname">render</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/humongolus/__init__.html#Widget.render"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.__init__.Widget.render" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override to customize output</p>
+<p>Default returns self._object.__repr__()</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="humongolus.__init__.List">
+<em class="property">class </em><tt class="descclassname">humongolus.__init__.</tt><tt class="descname">List</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/humongolus/__init__.html#List"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.__init__.List" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">list</span></tt></p>
+<p>Used to describe an array in a :class: <cite>~Document</cite> or :class: <cite>~EmbeddedDocument</cite>. Extends list.</p>
+<dl class="method">
+<dt id="humongolus.__init__.List.append">
+<tt class="descname">append</tt><big>(</big><em>obj</em><big>)</big><a class="reference internal" href="_modules/humongolus/__init__.html#List.append"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.__init__.List.append" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="humongolus.__init__.List.logger">
+<tt class="descname">logger</tt><em class="property"> = None</em><a class="headerlink" href="#humongolus.__init__.List.logger" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="humongolus.__init__.List.render">
+<tt class="descname">render</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/humongolus/__init__.html#List.render"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.__init__.List.render" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override to customize output</p>
+<p>The default returns self.__repr__() unless a widget is available then calls render on the widget.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="humongolus.__init__.Lazy">
+<em class="property">class </em><tt class="descclassname">humongolus.__init__.</tt><tt class="descname">Lazy</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/humongolus/__init__.html#Lazy"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.__init__.Lazy" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Object for describing a &#8220;foreign key&#8221; relationship across Models</p>
+<dl class="method">
+<dt id="humongolus.__init__.Lazy.render">
+<tt class="descname">render</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/humongolus/__init__.html#Lazy.render"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.__init__.Lazy.render" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override to customize output</p>
+<p>The default returns self.__repr__() unless a widget is available then calls render on the widget.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="module-humongolus.field">
+<span id="field-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">field</span></tt> Module<a class="headerlink" href="#module-humongolus.field" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="humongolus.field.AutoIncrement">
+<em class="property">class </em><tt class="descclassname">humongolus.field.</tt><tt class="descname">AutoIncrement</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/humongolus/field.html#AutoIncrement"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.field.AutoIncrement" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#humongolus.field.Integer" title="humongolus.field.Integer"><tt class="xref py py-class docutils literal"><span class="pre">humongolus.field.Integer</span></tt></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="humongolus.field.Boolean">
+<em class="property">class </em><tt class="descclassname">humongolus.field.</tt><tt class="descname">Boolean</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/humongolus/field.html#Boolean"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.field.Boolean" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">humongolus.Field</span></tt></p>
+<dl class="method">
+<dt id="humongolus.field.Boolean.clean">
+<tt class="descname">clean</tt><big>(</big><em>val</em>, <em>doc=None</em><big>)</big><a class="headerlink" href="#humongolus.field.Boolean.clean" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="humongolus.field.Char">
+<em class="property">class </em><tt class="descclassname">humongolus.field.</tt><tt class="descname">Char</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/humongolus/field.html#Char"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.field.Char" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">humongolus.Field</span></tt></p>
+<dl class="method">
+<dt id="humongolus.field.Char.clean">
+<tt class="descname">clean</tt><big>(</big><em>val</em>, <em>doc=None</em><big>)</big><a class="headerlink" href="#humongolus.field.Char.clean" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="humongolus.field.Choice">
+<em class="property">class </em><tt class="descclassname">humongolus.field.</tt><tt class="descname">Choice</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/humongolus/field.html#Choice"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.field.Choice" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#humongolus.field.Char" title="humongolus.field.Char"><tt class="xref py py-class docutils literal"><span class="pre">humongolus.field.Char</span></tt></a></p>
+<dl class="method">
+<dt id="humongolus.field.Choice.clean">
+<tt class="descname">clean</tt><big>(</big><em>val</em>, <em>doc=None</em><big>)</big><a class="headerlink" href="#humongolus.field.Choice.clean" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="humongolus.field.CollectionChoice">
+<em class="property">class </em><tt class="descclassname">humongolus.field.</tt><tt class="descname">CollectionChoice</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/humongolus/field.html#CollectionChoice"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.field.CollectionChoice" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#humongolus.field.Choice" title="humongolus.field.Choice"><tt class="xref py py-class docutils literal"><span class="pre">humongolus.field.Choice</span></tt></a></p>
+<dl class="method">
+<dt id="humongolus.field.CollectionChoice.render">
+<tt class="descname">render</tt><big>(</big><em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/humongolus/field.html#CollectionChoice.render"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.field.CollectionChoice.render" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="humongolus.field.Date">
+<em class="property">class </em><tt class="descclassname">humongolus.field.</tt><tt class="descname">Date</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/humongolus/field.html#Date"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.field.Date" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">humongolus.Field</span></tt></p>
+<dl class="method">
+<dt id="humongolus.field.Date.clean">
+<tt class="descname">clean</tt><big>(</big><em>val</em>, <em>doc=None</em><big>)</big><a class="headerlink" href="#humongolus.field.Date.clean" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="humongolus.field.DocumentId">
+<em class="property">class </em><tt class="descclassname">humongolus.field.</tt><tt class="descname">DocumentId</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#humongolus.field.DocumentId" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">humongolus.Field</span></tt></p>
+<dl class="method">
+<dt id="humongolus.field.DocumentId.clean">
+<tt class="descname">clean</tt><big>(</big><em>val</em>, <em>doc=None</em><big>)</big><a class="headerlink" href="#humongolus.field.DocumentId.clean" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="humongolus.field.DynamicDocument">
+<em class="property">class </em><tt class="descclassname">humongolus.field.</tt><tt class="descname">DynamicDocument</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#humongolus.field.DynamicDocument" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">humongolus.Field</span></tt></p>
+<dl class="method">
+<dt id="humongolus.field.DynamicDocument.clean">
+<tt class="descname">clean</tt><big>(</big><em>val</em>, <em>doc=None</em><big>)</big><a class="headerlink" href="#humongolus.field.DynamicDocument.clean" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="humongolus.field.Email">
+<em class="property">class </em><tt class="descclassname">humongolus.field.</tt><tt class="descname">Email</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/humongolus/field.html#Email"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.field.Email" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#humongolus.field.Regex" title="humongolus.field.Regex"><tt class="xref py py-class docutils literal"><span class="pre">humongolus.field.Regex</span></tt></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="humongolus.field.File">
+<em class="property">class </em><tt class="descclassname">humongolus.field.</tt><tt class="descname">File</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#humongolus.field.File" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#humongolus.field.DocumentId" title="humongolus.field.DocumentId"><tt class="xref py py-class docutils literal"><span class="pre">humongolus.field.DocumentId</span></tt></a></p>
+<dl class="method">
+<dt id="humongolus.field.File.clean">
+<tt class="descname">clean</tt><big>(</big><em>val</em>, <em>doc=None</em><big>)</big><a class="headerlink" href="#humongolus.field.File.clean" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="humongolus.field.File.delete">
+<tt class="descname">delete</tt><big>(</big><big>)</big><a class="headerlink" href="#humongolus.field.File.delete" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="humongolus.field.File.exists">
+<tt class="descname">exists</tt><big>(</big><big>)</big><a class="headerlink" href="#humongolus.field.File.exists" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="humongolus.field.Float">
+<em class="property">class </em><tt class="descclassname">humongolus.field.</tt><tt class="descname">Float</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/humongolus/field.html#Float"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.field.Float" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#humongolus.field.Integer" title="humongolus.field.Integer"><tt class="xref py py-class docutils literal"><span class="pre">humongolus.field.Integer</span></tt></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="humongolus.field.Geo">
+<em class="property">class </em><tt class="descclassname">humongolus.field.</tt><tt class="descname">Geo</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/humongolus/field.html#Geo"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.field.Geo" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">humongolus.Field</span></tt></p>
+<dl class="method">
+<dt id="humongolus.field.Geo.clean">
+<tt class="descname">clean</tt><big>(</big><em>val</em>, <em>doc=None</em><big>)</big><a class="headerlink" href="#humongolus.field.Geo.clean" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="humongolus.field.Integer">
+<em class="property">class </em><tt class="descclassname">humongolus.field.</tt><tt class="descname">Integer</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/humongolus/field.html#Integer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.field.Integer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#humongolus.field.Char" title="humongolus.field.Char"><tt class="xref py py-class docutils literal"><span class="pre">humongolus.field.Char</span></tt></a></p>
+<dl class="method">
+<dt id="humongolus.field.Integer.clean">
+<tt class="descname">clean</tt><big>(</big><em>val</em>, <em>doc=None</em><big>)</big><a class="headerlink" href="#humongolus.field.Integer.clean" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="humongolus.field.MaxException">
+<em class="property">exception </em><tt class="descclassname">humongolus.field.</tt><tt class="descname">MaxException</tt><a class="headerlink" href="#humongolus.field.MaxException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">humongolus.FieldException</span></tt></p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="humongolus.field.MinException">
+<em class="property">exception </em><tt class="descclassname">humongolus.field.</tt><tt class="descname">MinException</tt><a class="headerlink" href="#humongolus.field.MinException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">humongolus.FieldException</span></tt></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="humongolus.field.ModelChoice">
+<em class="property">class </em><tt class="descclassname">humongolus.field.</tt><tt class="descname">ModelChoice</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/humongolus/field.html#ModelChoice"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.field.ModelChoice" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#humongolus.field.DocumentId" title="humongolus.field.DocumentId"><tt class="xref py py-class docutils literal"><span class="pre">humongolus.field.DocumentId</span></tt></a></p>
+<dl class="method">
+<dt id="humongolus.field.ModelChoice.render">
+<tt class="descname">render</tt><big>(</big><em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/humongolus/field.html#ModelChoice.render"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.field.ModelChoice.render" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="humongolus.field.Phone">
+<em class="property">class </em><tt class="descclassname">humongolus.field.</tt><tt class="descname">Phone</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#humongolus.field.Phone" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#humongolus.field.Char" title="humongolus.field.Char"><tt class="xref py py-class docutils literal"><span class="pre">humongolus.field.Char</span></tt></a></p>
+<dl class="method">
+<dt id="humongolus.field.Phone.clean">
+<tt class="descname">clean</tt><big>(</big><em>val</em>, <em>doc=None</em><big>)</big><a class="headerlink" href="#humongolus.field.Phone.clean" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="humongolus.field.Regex">
+<em class="property">class </em><tt class="descclassname">humongolus.field.</tt><tt class="descname">Regex</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/humongolus/field.html#Regex"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.field.Regex" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#humongolus.field.Char" title="humongolus.field.Char"><tt class="xref py py-class docutils literal"><span class="pre">humongolus.field.Char</span></tt></a></p>
+<dl class="method">
+<dt id="humongolus.field.Regex.clean">
+<tt class="descname">clean</tt><big>(</big><em>val</em>, <em>doc=None</em><big>)</big><a class="headerlink" href="#humongolus.field.Regex.clean" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="humongolus.field.TimeStamp">
+<em class="property">class </em><tt class="descclassname">humongolus.field.</tt><tt class="descname">TimeStamp</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/humongolus/field.html#TimeStamp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.field.TimeStamp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#humongolus.field.Date" title="humongolus.field.Date"><tt class="xref py py-class docutils literal"><span class="pre">humongolus.field.Date</span></tt></a></p>
+</dd></dl>
+
+<dl class="function">
+<dt id="humongolus.field.collection_display">
+<tt class="descclassname">humongolus.field.</tt><tt class="descname">collection_display</tt><big>(</big><em>obj</em><big>)</big><a class="headerlink" href="#humongolus.field.collection_display" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="humongolus.field.model_display">
+<tt class="descclassname">humongolus.field.</tt><tt class="descname">model_display</tt><big>(</big><em>obj</em><big>)</big><a class="reference internal" href="_modules/humongolus/field.html#model_display"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.field.model_display" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="humongolus.field.parse_phone">
+<tt class="descclassname">humongolus.field.</tt><tt class="descname">parse_phone</tt><big>(</big><em>number</em><big>)</big><a class="headerlink" href="#humongolus.field.parse_phone" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</div>
+<div class="section" id="module-humongolus.settings">
+<span id="settings-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">settings</span></tt> Module<a class="headerlink" href="#module-humongolus.settings" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-humongolus.widget">
+<span id="widget-module"></span><h2><tt class="xref py py-mod docutils literal"><span class="pre">widget</span></tt> Module<a class="headerlink" href="#module-humongolus.widget" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="humongolus.widget.CheckBox">
+<em class="property">class </em><tt class="descclassname">humongolus.widget.</tt><tt class="descname">CheckBox</tt><big>(</big><em>obj</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/humongolus/widget.html#CheckBox"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.widget.CheckBox" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#humongolus.widget.Input" title="humongolus.widget.Input"><tt class="xref py py-class docutils literal"><span class="pre">humongolus.widget.Input</span></tt></a></p>
+<dl class="method">
+<dt id="humongolus.widget.CheckBox.render">
+<tt class="descname">render</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/humongolus/widget.html#CheckBox.render"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.widget.CheckBox.render" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="humongolus.widget.FieldSet">
+<em class="property">class </em><tt class="descclassname">humongolus.widget.</tt><tt class="descname">FieldSet</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#humongolus.widget.FieldSet" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#humongolus.widget.FormElement" title="humongolus.widget.FormElement"><tt class="xref py py-class docutils literal"><span class="pre">humongolus.widget.FormElement</span></tt></a></p>
+<dl class="method">
+<dt id="humongolus.widget.FieldSet.render">
+<tt class="descname">render</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#humongolus.widget.FieldSet.render" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="humongolus.widget.Form">
+<em class="property">class </em><tt class="descclassname">humongolus.widget.</tt><tt class="descname">Form</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#humongolus.widget.Form" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#humongolus.widget.FormElement" title="humongolus.widget.FormElement"><tt class="xref py py-class docutils literal"><span class="pre">humongolus.widget.FormElement</span></tt></a></p>
+<dl class="attribute">
+<dt id="humongolus.widget.Form.errors">
+<tt class="descname">errors</tt><em class="property"> = {}</em><a class="headerlink" href="#humongolus.widget.Form.errors" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="humongolus.widget.Form.parse_data">
+<tt class="descname">parse_data</tt><big>(</big><em>data</em><big>)</big><a class="headerlink" href="#humongolus.widget.Form.parse_data" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="humongolus.widget.Form.render">
+<tt class="descname">render</tt><big>(</big><big>)</big><a class="headerlink" href="#humongolus.widget.Form.render" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="humongolus.widget.Form.submit">
+<tt class="descname">submit</tt><big>(</big><big>)</big><a class="headerlink" href="#humongolus.widget.Form.submit" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="humongolus.widget.Form.validate">
+<tt class="descname">validate</tt><big>(</big><big>)</big><a class="headerlink" href="#humongolus.widget.Form.validate" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="humongolus.widget.FormElement">
+<em class="property">class </em><tt class="descclassname">humongolus.widget.</tt><tt class="descname">FormElement</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#humongolus.widget.FormElement" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">humongolus.Widget</span></tt></p>
+<dl class="method">
+<dt id="humongolus.widget.FormElement.render_child">
+<tt class="descname">render_child</tt><big>(</big><em>obj</em>, <em>widget</em>, <em>namespace</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#humongolus.widget.FormElement.render_child" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="humongolus.widget.FormElement.render_fields">
+<tt class="descname">render_fields</tt><big>(</big><em>namespace=None</em><big>)</big><a class="headerlink" href="#humongolus.widget.FormElement.render_fields" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="humongolus.widget.FormElement.render_label">
+<tt class="descname">render_label</tt><big>(</big><em>name</em>, <em>label</em><big>)</big><a class="headerlink" href="#humongolus.widget.FormElement.render_label" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="humongolus.widget.FormField">
+<em class="property">class </em><tt class="descclassname">humongolus.widget.</tt><tt class="descname">FormField</tt><big>(</big><em>**kwargs</em><big>)</big><a class="headerlink" href="#humongolus.widget.FormField" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<dl class="method">
+<dt id="humongolus.widget.FormField.label">
+<tt class="descname">label</tt><big>(</big><big>)</big><a class="headerlink" href="#humongolus.widget.FormField.label" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="humongolus.widget.FormField.render">
+<tt class="descname">render</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#humongolus.widget.FormField.render" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="humongolus.widget.HTMLElement">
+<em class="property">class </em><tt class="descclassname">humongolus.widget.</tt><tt class="descname">HTMLElement</tt><big>(</big><em>obj</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#humongolus.widget.HTMLElement" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">humongolus.Widget</span></tt></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="humongolus.widget.Input">
+<em class="property">class </em><tt class="descclassname">humongolus.widget.</tt><tt class="descname">Input</tt><big>(</big><em>obj</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#humongolus.widget.Input" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#humongolus.widget.HTMLElement" title="humongolus.widget.HTMLElement"><tt class="xref py py-class docutils literal"><span class="pre">humongolus.widget.HTMLElement</span></tt></a></p>
+<dl class="method">
+<dt id="humongolus.widget.Input.render">
+<tt class="descname">render</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#humongolus.widget.Input.render" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="humongolus.widget.Password">
+<em class="property">class </em><tt class="descclassname">humongolus.widget.</tt><tt class="descname">Password</tt><big>(</big><em>obj</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/humongolus/widget.html#Password"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.widget.Password" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#humongolus.widget.Input" title="humongolus.widget.Input"><tt class="xref py py-class docutils literal"><span class="pre">humongolus.widget.Input</span></tt></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="humongolus.widget.Select">
+<em class="property">class </em><tt class="descclassname">humongolus.widget.</tt><tt class="descname">Select</tt><big>(</big><em>obj</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/humongolus/widget.html#Select"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.widget.Select" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#humongolus.widget.Input" title="humongolus.widget.Input"><tt class="xref py py-class docutils literal"><span class="pre">humongolus.widget.Input</span></tt></a></p>
+<dl class="method">
+<dt id="humongolus.widget.Select.render">
+<tt class="descname">render</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/humongolus/widget.html#Select.render"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.widget.Select.render" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table Of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">humongolus Package</a><ul>
+<li><a class="reference internal" href="#id1"><tt class="docutils literal"><span class="pre">humongolus</span></tt> Package</a></li>
+<li><a class="reference internal" href="#module-humongolus.field"><tt class="docutils literal"><span class="pre">field</span></tt> Module</a></li>
+<li><a class="reference internal" href="#module-humongolus.settings"><tt class="docutils literal"><span class="pre">settings</span></tt> Module</a></li>
+<li><a class="reference internal" href="#module-humongolus.widget"><tt class="docutils literal"><span class="pre">widget</span></tt> Module</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Welcome to humongolus&#8217;s documentation!</a></p>
+  <h3>This Page</h3>
+  <ul class="this-page-menu">
+    <li><a href="_sources/humongolus.txt"
+           rel="nofollow">Show Source</a></li>
+  </ul>
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Welcome to humongolus’s documentation!"
+             >previous</a> |</li>
+        <li><a href="index.html">Humongolus 0 documentation</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Christopher Coté.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,269 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>humongolus.widget &mdash; Humongolus 0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Humongolus 0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Humongolus 0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for humongolus.widget</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">util</span>
+<span class="kn">import</span> <span class="nn">settings</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">import</span> <span class="nn">field</span>
+
+<span class="n">EMPTY_VALUES</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;&quot;</span><span class="p">,</span> <span class="s">u&quot;&quot;</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="s">&quot; &quot;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="Widget"><a class="viewcode-back" href="../../humongolus.html#humongolus.widget.Widget">[docs]</a><span class="k">class</span> <span class="nc">Widget</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="n">__args__</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">__tag__</span> <span class="o">=</span> <span class="s">&quot;input&quot;</span>
+    <span class="n">__type__</span> <span class="o">=</span> <span class="s">&quot;text&quot;</span>
+    <span class="n">__field__</span> <span class="o">=</span> <span class="bp">None</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">field</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__field__</span> <span class="o">=</span> <span class="n">field</span>        
+        <span class="bp">self</span><span class="o">.</span><span class="n">__args__</span> <span class="o">=</span> <span class="n">kwargs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logger</span> <span class="o">=</span> <span class="n">settings</span><span class="o">.</span><span class="n">LOGGER</span><span class="p">(</span><span class="n">settings</span><span class="o">.</span><span class="n">LOG</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+        
+        
+<div class="viewcode-block" id="Widget.att_string"><a class="viewcode-back" href="../../humongolus.html#humongolus.widget.Widget.att_string">[docs]</a>    <span class="k">def</span> <span class="nf">att_string</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">args</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="n">args</span> <span class="o">=</span> <span class="n">args</span> <span class="k">if</span> <span class="n">args</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">__args__</span>
+        
+        <span class="n">atts</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span><span class="n">v</span> <span class="ow">in</span> <span class="n">args</span><span class="o">.</span><span class="n">iteritems</span><span class="p">():</span>
+            <span class="n">v</span> <span class="o">=</span> <span class="n">v</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="nb">list</span><span class="p">)</span> <span class="k">else</span> <span class="p">[</span><span class="n">v</span><span class="p">]</span>
+            <span class="n">atts</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">u&quot;</span><span class="si">%s</span><span class="s">=&#39;</span><span class="si">%s</span><span class="s">&#39;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="s">u&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">util</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">val</span><span class="p">)</span> <span class="k">for</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">v</span><span class="p">])))</span>
+        
+        <span class="k">return</span> <span class="s">u&quot; &quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">atts</span><span class="p">)</span>
+    </div>
+    <span class="k">def</span> <span class="nf">__clean__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span> <span class="k">return</span> <span class="n">value</span>
+    
+<div class="viewcode-block" id="Widget.render"><a class="viewcode-back" href="../../humongolus.html#humongolus.widget.Widget.render">[docs]</a>    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;type&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;type&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">__type__</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s">&#39;value&#39;</span><span class="p">):</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;value&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__field__</span><span class="o">.</span><span class="n">val</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__field__</span><span class="o">.</span><span class="n">val</span> <span class="o">!=</span> <span class="bp">None</span> <span class="k">else</span> <span class="s">&quot;&quot;</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;name&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;name&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">__field__</span><span class="o">.</span><span class="n">name</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__field__</span><span class="o">.</span><span class="n">__required__</span><span class="p">:</span> 
+            <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;class&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;class&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;class&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span> <span class="k">else</span> <span class="p">[]</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;class&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;required&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;id&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;id_</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">__field__</span><span class="o">.</span><span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__args__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s">u&quot;&lt;</span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s">/&gt;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__tag__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">att_string</span><span class="p">())</span>
+
+</div></div>
+<div class="viewcode-block" id="TextInput"><a class="viewcode-back" href="../../humongolus.html#humongolus.widget.TextInput">[docs]</a><span class="k">class</span> <span class="nc">TextInput</span><span class="p">(</span><span class="n">Widget</span><span class="p">):</span> <span class="k">pass</span>
+</div>
+<div class="viewcode-block" id="PhoneNumber"><a class="viewcode-back" href="../../humongolus.html#humongolus.widget.PhoneNumber">[docs]</a><span class="k">class</span> <span class="nc">PhoneNumber</span><span class="p">(</span><span class="n">TextInput</span><span class="p">):</span>
+    
+    <span class="k">def</span> <span class="nf">__clean__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">EMPTY_VALUES</span><span class="p">:</span> <span class="k">return</span> <span class="n">util</span><span class="o">.</span><span class="n">parse_phone</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">None</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&quot;Invalid Phone Number&quot;</span><span class="p">)</span>
+    
+        </div>
+<div class="viewcode-block" id="Password"><a class="viewcode-back" href="../../humongolus.html#humongolus.widget.Password">[docs]</a><span class="k">class</span> <span class="nc">Password</span><span class="p">(</span><span class="n">Widget</span><span class="p">):</span>
+    <span class="n">__type__</span> <span class="o">=</span> <span class="s">&quot;password&quot;</span>
+    
+<div class="viewcode-block" id="Password.render"><a class="viewcode-back" href="../../humongolus.html#humongolus.widget.Password.render">[docs]</a>    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;value&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">Password</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        </div></div>
+<div class="viewcode-block" id="ConfirmPassword"><a class="viewcode-back" href="../../humongolus.html#humongolus.widget.ConfirmPassword">[docs]</a><span class="k">class</span> <span class="nc">ConfirmPassword</span><span class="p">(</span><span class="n">Widget</span><span class="p">):</span>
+    <span class="n">__type__</span> <span class="o">=</span> <span class="s">&quot;password&quot;</span>
+    
+<div class="viewcode-block" id="ConfirmPassword.render"><a class="viewcode-back" href="../../humongolus.html#humongolus.widget.ConfirmPassword.render">[docs]</a>    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;value&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;&quot;</span>
+        <span class="n">st</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">ConfirmPassword</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">st</span> <span class="o">=</span> <span class="n">st</span> <span class="o">+</span> <span class="s">&quot;&lt;label&gt;Confirm Password&lt;/label&gt;&quot;</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__field__</span><span class="o">.</span><span class="n">name</span><span class="o">+</span><span class="s">&quot;_confirm&quot;</span>
+        <span class="n">st</span> <span class="o">=</span> <span class="n">st</span><span class="o">+</span> <span class="nb">super</span><span class="p">(</span><span class="n">ConfirmPassword</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">st</span>
+        
+        </div></div>
+<div class="viewcode-block" id="TextArea"><a class="viewcode-back" href="../../humongolus.html#humongolus.widget.TextArea">[docs]</a><span class="k">class</span> <span class="nc">TextArea</span><span class="p">(</span><span class="n">Widget</span><span class="p">):</span>
+    <span class="n">__tag__</span> <span class="o">=</span> <span class="s">&quot;textarea&quot;</span>
+    
+<div class="viewcode-block" id="TextArea.render"><a class="viewcode-back" href="../../humongolus.html#humongolus.widget.TextArea.render">[docs]</a>    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__field__</span><span class="o">.</span><span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__args__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">val</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__field__</span><span class="o">.</span><span class="n">val</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__field__</span><span class="o">.</span><span class="n">val</span> <span class="o">!=</span> <span class="bp">None</span> <span class="k">else</span> <span class="s">&quot;&quot;</span>
+        <span class="k">return</span> <span class="s">u&quot;&lt;</span><span class="si">%s</span><span class="s"> </span><span class="si">%s</span><span class="s">&gt;</span><span class="si">%s</span><span class="s">&lt;/</span><span class="si">%s</span><span class="s">&gt;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__tag__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">att_string</span><span class="p">(),</span> <span class="n">val</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">__tag__</span><span class="p">)</span>
+        </div></div>
+<div class="viewcode-block" id="CheckBox"><a class="viewcode-back" href="../../humongolus.html#humongolus.widget.CheckBox">[docs]</a><span class="k">class</span> <span class="nc">CheckBox</span><span class="p">(</span><span class="n">Widget</span><span class="p">):</span>
+    <span class="n">__type__</span> <span class="o">=</span> <span class="s">&quot;checkbox&quot;</span>
+    
+<div class="viewcode-block" id="CheckBox.render"><a class="viewcode-back" href="../../humongolus.html#humongolus.widget.CheckBox.render">[docs]</a>    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__field__</span><span class="o">.</span><span class="n">val</span> <span class="ow">is</span> <span class="bp">True</span><span class="p">:</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;checked&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;CHECKED&#39;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s">&#39;value&#39;</span><span class="p">):</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;value&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;1&quot;</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">CheckBox</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        
+</div></div>
+<div class="viewcode-block" id="Select"><a class="viewcode-back" href="../../humongolus.html#humongolus.widget.Select">[docs]</a><span class="k">class</span> <span class="nc">Select</span><span class="p">(</span><span class="n">Widget</span><span class="p">):</span>
+    
+<div class="viewcode-block" id="Select.render"><a class="viewcode-back" href="../../humongolus.html#humongolus.widget.Select.render">[docs]</a>    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__field__</span><span class="p">,</span> <span class="s">&#39;choices&#39;</span><span class="p">):</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&quot;Incompatiable Field for Select Widget&quot;</span><span class="p">)</span>
+        </div>
+<div class="viewcode-block" id="Select.build"><a class="viewcode-back" href="../../humongolus.html#humongolus.widget.Select.build">[docs]</a>    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;name&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;name&#39;</span><span class="p">)</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">__field__</span><span class="o">.</span><span class="n">name</span>
+        <span class="n">options</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">opt</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__field__</span><span class="o">.</span><span class="n">choices</span><span class="p">:</span>
+            <span class="n">opt_args</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">opt</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span> 
+                <span class="n">value</span> <span class="o">=</span> <span class="n">opt</span><span class="p">[</span><span class="s">&#39;value&#39;</span><span class="p">]</span>
+                <span class="n">display</span> <span class="o">=</span> <span class="n">opt</span><span class="p">[</span><span class="s">&#39;display&#39;</span><span class="p">]</span>
+            <span class="k">else</span><span class="p">:</span> 
+                <span class="n">value</span> <span class="o">=</span> <span class="n">opt</span>
+                <span class="n">display</span> <span class="o">=</span> <span class="n">opt</span>
+            <span class="n">opt_args</span><span class="p">[</span><span class="s">&#39;value&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+            <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="bp">self</span><span class="o">.</span><span class="n">__field__</span><span class="o">.</span><span class="n">val</span><span class="p">:</span> <span class="n">opt_args</span><span class="p">[</span><span class="s">&#39;selected&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;selected&#39;</span>
+            <span class="n">options</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">u&quot;&lt;option </span><span class="si">%s</span><span class="s">&gt;</span><span class="si">%s</span><span class="s">&lt;/option&gt;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">att_string</span><span class="p">(</span><span class="n">args</span><span class="o">=</span><span class="n">opt_args</span><span class="p">),</span> <span class="n">util</span><span class="o">.</span><span class="n">escape</span><span class="p">(</span><span class="n">display</span><span class="p">)))</span>
+        
+        <span class="bp">self</span><span class="o">.</span><span class="n">__args__</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s">u&quot;&lt;select </span><span class="si">%s</span><span class="s">&gt;</span><span class="si">%s</span><span class="s">&lt;/select&gt;&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">att_string</span><span class="p">(),</span> <span class="s">u&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">options</span><span class="p">))</span>
+      
+  </div></div>
+<div class="viewcode-block" id="MultipleSelect"><a class="viewcode-back" href="../../humongolus.html#humongolus.widget.MultipleSelect">[docs]</a><span class="k">class</span> <span class="nc">MultipleSelect</span><span class="p">(</span><span class="n">Select</span><span class="p">):</span>
+
+<div class="viewcode-block" id="MultipleSelect.build"><a class="viewcode-back" href="../../humongolus.html#humongolus.widget.MultipleSelect.build">[docs]</a>    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;multiple&#39;</span><span class="p">]</span><span class="o">=</span><span class="s">&#39;multiple&#39;</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">MultipleSelect</span><span class="p">,</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">build</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+          </div></div>
+<div class="viewcode-block" id="Hidden"><a class="viewcode-back" href="../../humongolus.html#humongolus.widget.Hidden">[docs]</a><span class="k">class</span> <span class="nc">Hidden</span><span class="p">(</span><span class="n">Widget</span><span class="p">):</span>
+    <span class="n">__type__</span> <span class="o">=</span> <span class="s">&quot;hidden&quot;</span>   
+</div>
+<div class="viewcode-block" id="Date"><a class="viewcode-back" href="../../humongolus.html#humongolus.widget.Date">[docs]</a><span class="k">class</span> <span class="nc">Date</span><span class="p">(</span><span class="n">Widget</span><span class="p">):</span>
+    
+    <span class="k">def</span> <span class="nf">__clean__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">):</span> <span class="k">return</span> <span class="n">value</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">EMPTY_VALUES</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s">&quot;%Y-%m-</span><span class="si">%d</span><span class="s"> %H:%M:%S.</span><span class="si">%f</span><span class="s">&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">None</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">e</span>
+    
+<div class="viewcode-block" id="Date.render"><a class="viewcode-back" href="../../humongolus.html#humongolus.widget.Date.render">[docs]</a>    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__field__</span><span class="o">.</span><span class="n">__value__</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;value&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;value&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">strftime</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__field__</span><span class="o">.</span><span class="n">__value__</span><span class="p">,</span> <span class="s">&quot;%Y-%m-</span><span class="si">%d</span><span class="s"> %H:%M:%S.</span><span class="si">%f</span><span class="s">&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">Date</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</div></div>
+<div class="viewcode-block" id="TimeStamp"><a class="viewcode-back" href="../../humongolus.html#humongolus.widget.TimeStamp">[docs]</a><span class="k">class</span> <span class="nc">TimeStamp</span><span class="p">(</span><span class="n">Widget</span><span class="p">):</span>
+<div class="viewcode-block" id="TimeStamp.render"><a class="viewcode-back" href="../../humongolus.html#humongolus.widget.TimeStamp.render">[docs]</a>    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;value&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__field__</span><span class="o">.</span><span class="n">__value__</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__field__</span><span class="o">.</span><span class="n">__value__</span> <span class="k">else</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">()</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">TimeStamp</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</div>
+    <span class="k">def</span> <span class="nf">__clean__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">):</span> <span class="k">return</span> <span class="n">value</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">EMPTY_VALUES</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">strptime</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s">&quot;%Y-%m-</span><span class="si">%d</span><span class="s"> %H:%M:%S.</span><span class="si">%f</span><span class="s">&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="bp">None</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">e</span>
+
+</div>
+<div class="viewcode-block" id="Link"><a class="viewcode-back" href="../../humongolus.html#humongolus.widget.Link">[docs]</a><span class="k">class</span> <span class="nc">Link</span><span class="p">(</span><span class="n">Widget</span><span class="p">):</span>
+<div class="viewcode-block" id="Link.render"><a class="viewcode-back" href="../../humongolus.html#humongolus.widget.Link.render">[docs]</a>    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s">&quot;&lt;a href=&#39;</span><span class="si">%s</span><span class="s">&#39; target=&#39;_blank&#39;&gt;Facebook Account&lt;/a&gt;&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">__field__</span><span class="o">.</span><span class="n">__value__</span>
+        
+</div></div>
+<div class="viewcode-block" id="ObjectView"><a class="viewcode-back" href="../../humongolus.html#humongolus.widget.ObjectView">[docs]</a><span class="k">class</span> <span class="nc">ObjectView</span><span class="p">(</span><span class="n">Widget</span><span class="p">):</span>
+<div class="viewcode-block" id="ObjectView.render"><a class="viewcode-back" href="../../humongolus.html#humongolus.widget.ObjectView.render">[docs]</a>    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;type&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&#39;hidden&#39;</span>
+            <span class="n">st</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">ObjectView</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__field__</span><span class="p">,</span> <span class="n">field</span><span class="o">.</span><span class="n">MongoId</span><span class="p">):</span> <span class="k">return</span> <span class="n">st</span><span class="o">+</span><span class="bp">self</span><span class="o">.</span><span class="n">__field__</span><span class="p">()</span><span class="o">.</span><span class="n">view</span><span class="p">()</span>
+            <span class="k">else</span><span class="p">:</span> <span class="k">return</span> <span class="n">st</span> <span class="o">+</span> <span class="s">&quot;&lt;div class=&#39;object_view&#39;&gt;&lt;p&gt;</span><span class="si">%s</span><span class="s">&lt;/p&gt;&lt;/div&gt;&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">__field__</span><span class="o">.</span><span class="n">__value__</span>
+        <span class="k">except</span><span class="p">:</span> 
+            <span class="bp">self</span><span class="o">.</span><span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="s">&quot;no view for </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">__field__</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+            <span class="k">return</span> <span class="s">u&quot;&quot;</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Humongolus 0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Christopher Coté.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+    </div>
+  </body>
+</html>

@@ -1,3 +1,21 @@
+# Copyright 2012 Entropealabs
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+"""
+Humongolus is a Persistence and Widget Framework for MongoDB written in Python
+"""
+
 import settings as _settings
 import datetime
 import pymongo
@@ -6,6 +24,14 @@ from pymongo.objectid import ObjectId
 EMPTY = ("", " ", None, "None")
 
 def settings(logger, db_connection):
+    """Set the logger and MongoDB Connection
+
+    Apply Model Indexes
+
+    :Parameters:
+        - `logger`: instance of the Python Logger class
+        - `db_connection`: instance of a pymongo Connection class
+    """
     _settings.LOGGER = logger
     _settings.DB_CONNECTION = db_connection
     ensure_indexes()
@@ -19,25 +45,62 @@ def import_class(kls):
     return m
 
 class FieldValidator(object):
+    """Base class for custom field validation. Should always be extended.
+    """
     obj = None
 
     def __init__(self, obj):
         self.obj = obj
 
     def validate(self, val, doc=None):
+        """Override this method to apply custom validation for a field.
+
+        self.obj is the Model attribute being set.
+
+        through self.obj you have access to attributes _parent and _base
+        _parent is the Document|EmbeddedDocument containing the current field
+        _base is the base Document object if available
+
+        :Parameters:
+            - `val`: incoming value from a form or other assignment
+            - `doc`: a dictionary available if using the Form system. The dictionary will contain all keys passed to the Form object on instantiation
+
+        """
         return val
 
-class FieldException(Exception): pass
-class DocumentException(Exception): 
+class FieldException(Exception): 
+    """Exception for field validation errors.
+    """
+    pass
+class DocumentException(Exception):
+    """Exception thrown when an error/errors are raised when saving a Document
+    """
     errors = {}
     def __init__(self, errors):
+        """
+        Create a new instance of DocumentException
+
+        :Parameters:
+            - `errors`: dictionary of errors
+        """
         Exception.__init__(self, "")
         self.errors = errors
 
 class Widget(object):
+    """Base class for all widgets
+
+    When extending this class any variables beginning with _ are able to be set with kwargs when instanting
+    """
     _object = None
 
     def __init__(self, obj, **kwargs):
+        """Create a new instance of a widget
+        This is generally handled automatically when using the Form system
+
+        :Parameters:
+            - `obj`: the object to render the widget with
+            - `**kwargs`: will attempt to match and set  private(_) class attributes
+        """
         self._object = obj
         for k,v in kwargs.iteritems():
             try:
@@ -45,12 +108,37 @@ class Widget(object):
             except: pass
     
     def clean(self, val, doc=None):
+        """Override to apply custom parsing of form data. 
+        This is called anytime you set the value of a Field.
+        Should always return the "cleaned" value or raise a FieldException on error
+
+        :Parameters:
+            - `val`: incoming value from a form or other assignment
+            - `doc`: a dictionary available if using the Form system. The dictionary will contain all keys passed to the Form object on instantiation
+        """
         return val
     
     def render(self, *args, **kwargs):
+        """Override to customize output
+
+        Default returns self._object.__repr__()
+
+        """
         return self._object.__repr__()
 
 class Field(object):
+    """Base class for all Field types
+
+    :Parameters:
+        - `name`: when used in a Model, this will be the attribute name, optional
+        - `default`: default value, optional
+        - `required`: whether or not the field is required, optional default to False
+        - `display`: value for display purposes, this is used for labels when using the :class: `~widget.Form` widget, optional
+        - `dbkey`: if the field name in the mongodb document is different then the Models attribute name, use this to indicate the mongo attribute name
+        - `widget`: :class: `~Widget` to use for rendering, also assignable when creating a form, optional
+        - `validate`: an instance :class: `~FieldValidator` for custom validation
+    """
+    
     logger = None
     _name = None
     _conn = None
@@ -65,11 +153,11 @@ class Field(object):
     _base = None
     _parent = None
     _validate = None
-    _dbkey = None
     __kwargs__ = {}
     __args__ = ()
 
     def __init__(self, *args, **kwargs):
+        
         self.logger = _settings.LOGGER
         self._conn = _settings.DB_CONNECTION
         self.__kwargs__ = kwargs
@@ -92,7 +180,16 @@ class Field(object):
         self._dirty = self._value if not dirty else dirty
         self._value = val
     
-    def clean(self, val, doc=None): return val
+    def clean(self, val, doc=None): 
+        """Override to apply custom parsing of incoming value. 
+        This is called anytime you set the value of a Field.
+        Should always return the "cleaned" value or raise a FieldException on error
+
+        :Parameters:
+            - `val`: incoming value from a form or other assignment
+            - `doc`: a dictionary available if using the :class: `~Form` system. The dictionary will contain all keys passed to the :class: `~Form` object on instantiation
+        """
+        return val
     
     def _isrequired(self, val):
         if val in EMPTY and self._required: raise FieldException("Required Field")
@@ -122,6 +219,11 @@ class Field(object):
             self._error = e
     
     def render(self, *args, **kwargs):
+        """Override to customize output
+
+        The default returns the fields value unless a widget is available then calls render on the widget.
+
+        """
         self._widget = kwargs.get("widget", self._widget)
         if self._widget: return self._widget(self).render(*args, **kwargs)
         return self._value
@@ -136,6 +238,7 @@ class Field(object):
         return unicode(self._value)
 
 class Lazy(object):
+    """Object for describing a "foreign key" relationship across Models"""
     __kwargs__ = {}
     __args__ = ()
     _type = None
@@ -148,6 +251,12 @@ class Lazy(object):
     _dbkey = None
 
     def __init__(self, *args, **kwargs):
+        """
+        :Parameters:
+            - `type`: the type of :class: `~Document` returned. must be an instance of :class: `~Document`
+            - `key`: the "foreign key" to look up the types by. must be an attribute of type.
+
+        """
         self.logger = _settings.LOGGER
         self.__args__ = args
         self.__kwargs__ = kwargs
@@ -158,6 +267,9 @@ class Lazy(object):
 
     
     def __call__(self, **kwargs):
+        """when calling the lazy object it will return a mongodb cursor that yields models of the type.
+        It will use the the _id of the base document and look in the key of the type class
+        """
         q = kwargs.get('query', {})
         q.update({self._key:self._base._id})
         self._query.update(q)
@@ -169,6 +281,11 @@ class Lazy(object):
     def _json(self, *args, **kwargs): pass
 
     def render(self, *args, **kwargs):
+        """Override to customize output
+
+        The default returns self.__repr__() unless a widget is available then calls render on the widget.
+
+        """
         self._widget = kwargs.get("widget", self._widget)
         if self._widget: return self._widget(self).render(*args, **kwargs)
         return self.__repr__()
@@ -183,6 +300,7 @@ class Lazy(object):
         return unicode(self.__class__.__name__)
 
 class List(list):
+    """Used to describe an array in a :class: `~Document` or :class: `~EmbeddedDocument`. Extends list."""
     logger = None
     _type = None
     _length = None
@@ -191,12 +309,18 @@ class List(list):
     _parent = None
     _name = None
     _widget = None
-    _dbkey = None
     __kwargs__ = {}
     __args__ = ()
 
 
     def __init__(self, *args, **kwargs):
+        """
+        :Parameters:
+            - `type`: the type of :class: `~Document` returned. must be an instance of :class: `~Document`, can be an array
+            - `length`: maximum length of the array
+            - `dbkey`: if the field name in the mongodb document is different then the Models attribute name, use this to indicate the mongo attribute name
+            - `widget`: :class: `~Widget` to use for rendering, also assignable when creating a form, optional
+        """
         self.logger = _settings.LOGGER
         self.__kwargs__ = kwargs
         self.__args__ = args
@@ -255,6 +379,11 @@ class List(list):
         return ret
     
     def render(self, *args, **kwargs):
+        """Override to customize output
+
+        The default returns self.__repr__() unless a widget is available then calls render on the widget.
+
+        """
         self._widget = kwargs.get("widget", self._widget)
         if self._widget: return self._widget(self).render(*args, **kwargs)
         return self.__repr__()
@@ -385,9 +514,21 @@ class base(dict):
     def __unicode__(self):
         return unicode(self.__class__.__name__)
 
-class EmbeddedDocument(base):pass
+class EmbeddedDocument(base):
+    """Base class for all emdedded documents
+    """
+    pass
 
 class Document(base):
+    """Base class for all first level documents. This will contain the _id and has the "save" method.
+
+    All models should extend this class.
+
+    When extending always set _db and _collection. These tell humongolus where to save and find it's documents.
+
+    _indexes is used to set the mongo indexes, it should be an array of :class: `~Index` objects
+
+    """
     _id = None
     _db = None
     _collection = None
@@ -414,7 +555,7 @@ class Document(base):
     """
     this is called by pymongo for each key:val pair for each document 
     returned by find and find_one
-    """ 
+    """
     def __setitem__(self, key, val):
         #_id is a built-in field, it won't be in self.__keys__
         if key != '_id':
@@ -430,13 +571,22 @@ class Document(base):
         self._map(doc, init=True)
 
     @property
-    def active(self): return self.__active__
+    def active(self):
+        """is document active: Boolean
+        """
+        return self.__active__
     
     @property
-    def created(self): return self.__created__
+    def created(self): 
+        """created date of document: datetime
+        """
+        return self.__created__
 
     @property
-    def modified(self): return self.__modified__
+    def modified(self): 
+        """return last modify date of document. updated after every successful save: datetime
+        """
+        return self.__modified__
 
     @classmethod
     def _connection(cls):
@@ -446,11 +596,23 @@ class Document(base):
 
     @classmethod
     def find(cls, *args, **kwargs):
+        """returns pymongo cursor that yields instantiated Document objects of the Class type.
+        :Parameters:
+            - `*args`: passed directly to Connection.find()
+            - `**kwargs`: passed directly to Connection.find()
+        
+        extra kwargs paramter is as_dict this will return the raw dictionary from mongo, this also allows you to use the "fields" parameter
+        """
         if not kwargs.get("as_dict", None): kwargs['as_class'] = cls
         return cls._connection().find(*args, **kwargs)
     
     @classmethod
     def find_one(cls, *args, **kwargs):
+        """returns single instantiated Document object of the Class type.
+        :Parameters:
+            - `*args`: passed directly to Connection.find_one()
+            - `**kwargs`: passed directly to Connection.find_one()
+        """
         if not kwargs.get("as_dict", None): kwargs['as_class'] = cls
         return cls._connection().find_one(*args, **kwargs)    
     
@@ -468,13 +630,20 @@ class Document(base):
         cls._connection().update(*args, **kwargs)    
 
     def remove(self):
+        """Remove document. Calls .remove on pymongo Connection
+
+        """
         self.__class__.__remove__({"_id":self._id})
     
     def update(self, update, **kwargs):
+        """Update itself. Allows for custom saving, ie; not using safe=True
+        """
         self.__class__.__update__({"_id":self._id}, update, **kwargs)
     
 
     def json(self):
+        """Return json representation of itself.
+        """
         obj = self._json()
         obj['_id'] = self._id
         obj['__active__'] = self.active
@@ -483,6 +652,15 @@ class Document(base):
         return obj
 
     def save(self):
+        """use this method to write a new object to the database or to save en existing document after updating.
+
+        if the document already exists it will send an atomic update of only the changed attributes to mongo.
+
+        always uses safe=True
+
+        will raise a DocumentException if there are errors from validation, will also throw a pymongo Exception if insert or update fails.
+
+        """
         errors = self._errors()
         if len(errors.keys()):
             self.logger.error(errors) 

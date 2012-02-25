@@ -1,0 +1,532 @@
+
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>humongolus.field &mdash; Humongolus 0 documentation</title>
+    
+    <link rel="stylesheet" href="../../_static/default.css" type="text/css" />
+    <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../../',
+        VERSION:     '0',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../_static/doctools.js"></script>
+    <link rel="top" title="Humongolus 0 documentation" href="../../index.html" />
+    <link rel="up" title="Module code" href="../index.html" /> 
+  </head>
+  <body>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Humongolus 0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" accesskey="U">Module code</a> &raquo;</li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <h1>Source code for humongolus.field</h1><div class="highlight"><pre>
+<span class="kn">import</span> <span class="nn">re</span><span class="o">,</span> <span class="nn">inspect</span>
+<span class="kn">from</span> <span class="nn">pymongo.objectid</span> <span class="kn">import</span> <span class="n">ObjectId</span>
+<span class="kn">import</span> <span class="nn">datetime</span>
+<span class="kn">from</span> <span class="nn">widget</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">settings</span>
+<span class="kn">import</span> <span class="nn">util</span>
+
+<span class="n">EMPTY_VALUES</span> <span class="o">=</span> <span class="p">[</span><span class="s">&quot;&quot;</span><span class="p">,</span> <span class="s">u&quot;&quot;</span><span class="p">,</span> <span class="bp">None</span><span class="p">,</span> <span class="s">&quot; &quot;</span><span class="p">]</span>
+
+<span class="n">increment</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">sequence</span>
+
+<div class="viewcode-block" id="Field"><a class="viewcode-back" href="../../humongolus.html#humongolus.field.Field">[docs]</a><span class="k">class</span> <span class="nc">Field</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="n">__name__</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">__widget__</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">__old__</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">__value__</span>  <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">__required__</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">__default__</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">__id__</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">__errormessage__</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">__label__</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">__error__</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">__disabled__</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">__parent__</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">__args__</span> <span class="o">=</span> <span class="p">()</span>
+    <span class="n">__kwargs__</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">__namespace__</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">__inited__</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">__dbkey__</span> <span class="o">=</span> <span class="bp">None</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__value__</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;value&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__name__</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;name&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__widget__</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;widget&#39;</span><span class="p">,</span> <span class="n">TextInput</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__required__</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;required&#39;</span><span class="p">,</span> <span class="bp">False</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__default__</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;default&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__label__</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;label&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__id__</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;id&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__disabled__</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;disabled&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__errormessage__</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;error&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__namespace__</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__error__</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__args__</span> <span class="o">=</span> <span class="n">args</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__kwargs__</span> <span class="o">=</span> <span class="n">kwargs</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__dbkey__</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;dbkey&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__getvalue__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__value__</span>
+    
+    <span class="k">def</span> <span class="nf">__setvalue__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">value</span> <span class="o">==</span> <span class="bp">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">__default__</span> <span class="o">!=</span> <span class="bp">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">__inited__</span><span class="p">:</span> <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__default__</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__clean__</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__widget__</span><span class="p">:</span> <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__widget__</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__clean__</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">e</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__old__</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__value__</span> <span class="k">if</span> <span class="ow">not</span> <span class="n">init</span> <span class="k">else</span> <span class="n">value</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__value__</span> <span class="o">=</span> <span class="n">value</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__inited__</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__error__</span> <span class="o">=</span> <span class="n">e</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__value__</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__inited__</span> <span class="o">=</span> <span class="bp">True</span>
+            <span class="k">raise</span> <span class="n">e</span>
+        
+    <span class="k">def</span> <span class="nf">__delete__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">instance</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__value__</span> <span class="o">=</span> <span class="bp">None</span>
+    
+    <span class="k">def</span> <span class="nf">__iter__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__value__</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__value__</span><span class="p">)</span> 
+        
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__value__</span><span class="o">.</span><span class="n">iteritems</span><span class="p">()</span>
+    
+    <span class="k">def</span> <span class="nf">__clean__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">EMPTY_VALUES</span><span class="p">:</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__required__</span><span class="p">:</span>
+                <span class="n">ex</span> <span class="o">=</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&quot;Required Field&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__error__</span> <span class="o">=</span> <span class="n">ex</span>
+                <span class="k">raise</span> <span class="n">ex</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="bp">None</span>        
+
+        <span class="k">return</span> <span class="n">value</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__name__</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">label</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__label__</span>
+        
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">hidden</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">True</span> <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__widget__</span><span class="o">.</span><span class="n">__type__</span> <span class="o">==</span> <span class="s">&#39;hidden&#39;</span> <span class="k">else</span> <span class="bp">False</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">val</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__value__</span> <span class="o">==</span> <span class="bp">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">__default__</span> <span class="o">!=</span> <span class="bp">None</span><span class="p">:</span> <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__default__</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__value__</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">old</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__old__</span>
+        
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">req</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__required__</span>
+        
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">namespace</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__namespace__</span>
+    
+    
+    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span> 
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__disabled__</span><span class="p">:</span><span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;disabled&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">&quot;DISABLED&quot;</span>
+        <span class="k">if</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;cls&quot;</span><span class="p">,</span> <span class="bp">None</span><span class="p">):</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;class&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&quot;cls&quot;</span><span class="p">)</span>
+            <span class="k">del</span> <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;cls&#39;</span><span class="p">]</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__widget__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            
+    
+        </div>
+<div class="viewcode-block" id="Char"><a class="viewcode-back" href="../../humongolus.html#humongolus.field.Char">[docs]</a><span class="k">class</span> <span class="nc">Char</span><span class="p">(</span><span class="n">Field</span><span class="p">):</span>
+    <span class="n">__min__</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">__max__</span> <span class="o">=</span> <span class="bp">None</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__min__</span> <span class="o">=</span> <span class="nb">min</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__max</span> <span class="o">=</span> <span class="nb">max</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Char</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>    
+            
+    
+    <span class="k">def</span> <span class="nf">__clean__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="n">ex</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">Char</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__clean__</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">value</span><span class="p">:</span> <span class="n">value</span> <span class="o">=</span> <span class="nb">unicode</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__min__</span> <span class="ow">and</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">__min__</span><span class="p">):</span> <span class="n">ex</span> <span class="o">=</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&quot;Value length must be longer than &quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">__min__</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__max__</span> <span class="ow">and</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">__max__</span><span class="p">):</span> <span class="n">ex</span> <span class="o">=</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&quot;Value length must be shorter than &quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">__max__</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">ex</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__error__</span> <span class="o">=</span> <span class="n">ex</span>
+                <span class="k">raise</span> <span class="n">ex</span>
+            <span class="k">return</span> <span class="n">value</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__error__</span> <span class="o">=</span> <span class="n">e</span>
+            <span class="k">raise</span> <span class="n">e</span>
+            </div>
+<div class="viewcode-block" id="Password"><a class="viewcode-back" href="../../humongolus.html#humongolus.field.Password">[docs]</a><span class="k">class</span> <span class="nc">Password</span><span class="p">(</span><span class="n">Field</span><span class="p">):</span>
+    
+    <span class="k">def</span> <span class="nf">__setvalue__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">EMPTY_VALUES</span><span class="p">:</span> <span class="nb">super</span><span class="p">(</span><span class="n">Password</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__setvalue__</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">init</span><span class="p">)</span>
+
+</div>
+<div class="viewcode-block" id="Geo"><a class="viewcode-back" href="../../humongolus.html#humongolus.field.Geo">[docs]</a><span class="k">class</span> <span class="nc">Geo</span><span class="p">(</span><span class="n">Field</span><span class="p">):</span>
+    
+    <span class="k">def</span> <span class="nf">__clean__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>        
+        <span class="n">ex</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">Geo</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__clean__</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">value</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span> <span class="k">return</span> <span class="n">value</span>
+            <span class="k">elif</span> <span class="n">value</span><span class="p">:</span> <span class="k">raise</span> <span class="ne">Exception</span><span class="p">()</span>
+            <span class="k">return</span> <span class="bp">None</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&quot;Not an Array&quot;</span><span class="p">)</span>
+           </div>
+<div class="viewcode-block" id="Integer"><a class="viewcode-back" href="../../humongolus.html#humongolus.field.Integer">[docs]</a><span class="k">class</span> <span class="nc">Integer</span><span class="p">(</span><span class="n">Field</span><span class="p">):</span>
+    <span class="n">__min__</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">__max__</span> <span class="o">=</span> <span class="bp">None</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">min</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__min__</span> <span class="o">=</span> <span class="nb">min</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__max__</span> <span class="o">=</span> <span class="nb">max</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">__clean__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>        
+        <span class="n">ex</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__clean__</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">value</span><span class="p">:</span> <span class="n">value</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__min__</span> <span class="ow">and</span> <span class="p">(</span><span class="n">value</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">__min__</span><span class="p">):</span> <span class="n">ex</span> <span class="o">=</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&quot;Value must be greater than &quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">__min__</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__max__</span> <span class="ow">and</span> <span class="p">(</span><span class="n">value</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">__max__</span><span class="p">):</span> <span class="n">ex</span> <span class="o">=</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&quot;Value must be less than &quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">__max__</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">ex</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__error__</span> <span class="o">=</span> <span class="n">ex</span>
+                <span class="k">raise</span> <span class="n">ex</span>
+            <span class="k">return</span> <span class="n">value</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&quot;Not an integer&quot;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Float"><a class="viewcode-back" href="../../humongolus.html#humongolus.field.Float">[docs]</a><span class="k">class</span> <span class="nc">Float</span><span class="p">(</span><span class="n">Field</span><span class="p">):</span>
+    <span class="n">__min__</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">__max__</span> <span class="o">=</span> <span class="bp">False</span>
+    
+    
+    <span class="k">def</span> <span class="nf">__clean__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="n">ex</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">Float</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__clean__</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">value</span><span class="p">:</span> <span class="n">value</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__min__</span> <span class="ow">and</span> <span class="p">(</span><span class="n">value</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">__min__</span><span class="p">):</span> <span class="n">ex</span> <span class="o">=</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&quot;Value must be greater than &quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">__min__</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__max__</span> <span class="ow">and</span> <span class="p">(</span><span class="n">value</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">__max__</span><span class="p">):</span> <span class="n">ex</span> <span class="o">=</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&quot;Value must be less than &quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="n">__max__</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">ex</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__error__</span> <span class="o">=</span> <span class="n">ex</span>
+                <span class="k">raise</span> <span class="n">ex</span>
+            <span class="k">return</span> <span class="n">value</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&quot;Not a float&quot;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Choice"><a class="viewcode-back" href="../../humongolus.html#humongolus.field.Choice">[docs]</a><span class="k">class</span> <span class="nc">Choice</span><span class="p">(</span><span class="n">Field</span><span class="p">):</span>
+    <span class="n">__choices__</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;widget&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;widget&#39;</span><span class="p">,</span> <span class="n">Select</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__choices__</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;choices&#39;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Choice</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">choices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__choices__</span>
+        
+    <span class="k">def</span> <span class="nf">__clean__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="n">ex</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">Choice</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__clean__</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="n">vals</span> <span class="o">=</span> <span class="p">[</span><span class="n">opt</span><span class="p">[</span><span class="s">&#39;value&#39;</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">opt</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="k">else</span> <span class="n">opt</span> <span class="k">for</span> <span class="n">opt</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">__choices__</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">value</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">vals</span><span class="p">:</span>
+                <span class="n">ex</span> <span class="o">=</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&quot;Value given is not a valid option&quot;</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">__error__</span> <span class="o">=</span> <span class="n">ex</span>
+                <span class="k">raise</span> <span class="n">ex</span>
+            <span class="k">return</span> <span class="n">value</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">e</span>
+            </div>
+<div class="viewcode-block" id="AlternativeChoice"><a class="viewcode-back" href="../../humongolus.html#humongolus.field.AlternativeChoice">[docs]</a><span class="k">class</span> <span class="nc">AlternativeChoice</span><span class="p">(</span><span class="n">Choice</span><span class="p">):</span>
+    
+    <span class="k">def</span> <span class="nf">__clean__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">value</span>
+</div>
+<div class="viewcode-block" id="choice_display"><a class="viewcode-back" href="../../humongolus.html#humongolus.field.choice_display">[docs]</a><span class="k">def</span> <span class="nf">choice_display</span><span class="p">(</span><span class="n">choice</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">text</span>
+    </div>
+<div class="viewcode-block" id="CollectionChoice"><a class="viewcode-back" href="../../humongolus.html#humongolus.field.CollectionChoice">[docs]</a><span class="k">class</span> <span class="nc">CollectionChoice</span><span class="p">(</span><span class="n">Choice</span><span class="p">):</span>
+    
+    <span class="k">def</span> <span class="nf">__clean__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span> 
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">except</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">value</span>
+    
+<div class="viewcode-block" id="CollectionChoice.render"><a class="viewcode-back" href="../../humongolus.html#humongolus.field.CollectionChoice.render">[docs]</a>    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">db</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__kwargs__</span><span class="p">[</span><span class="s">&#39;db&#39;</span><span class="p">]</span>
+        <span class="n">collection</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__kwargs__</span><span class="p">[</span><span class="s">&#39;collection&#39;</span><span class="p">]</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__kwargs__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;query&#39;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">fields</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__kwargs__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;fields&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s">&#39;_id&#39;</span><span class="p">:</span><span class="mi">1</span><span class="p">})</span>
+        <span class="n">sort</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__kwargs__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;sort&#39;</span><span class="p">,</span> <span class="p">[(</span><span class="s">&#39;_id&#39;</span><span class="p">,</span><span class="mi">1</span><span class="p">)])</span>
+        <span class="n">skip</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__kwargs__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;skip&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+        <span class="n">limit</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__kwargs__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;limit&#39;</span><span class="p">,</span> <span class="mi">2000</span><span class="p">)</span>
+        <span class="n">display</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__kwargs__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;display&#39;</span><span class="p">,</span> <span class="n">choice_display</span><span class="p">)</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__kwargs__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;value&#39;</span><span class="p">,</span> <span class="s">&#39;_id&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__choices__</span> <span class="o">=</span> <span class="p">[</span><span class="n">display</span><span class="p">(</span><span class="n">choice</span><span class="p">)</span> <span class="k">for</span> <span class="n">choice</span> <span class="ow">in</span> <span class="n">settings</span><span class="o">.</span><span class="n">CONNECTION</span><span class="p">[</span><span class="n">db</span><span class="p">][</span><span class="n">collection</span><span class="p">]</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">query</span><span class="p">,</span> <span class="n">fields</span><span class="o">=</span><span class="n">fields</span><span class="p">,</span> <span class="n">sort</span><span class="o">=</span><span class="n">sort</span><span class="p">,</span> <span class="n">skip</span><span class="o">=</span><span class="n">skip</span><span class="p">,</span> <span class="n">limit</span><span class="o">=</span><span class="n">limit</span><span class="p">)]</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">CollectionChoice</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        
+    </div></div>
+<div class="viewcode-block" id="Boolean"><a class="viewcode-back" href="../../humongolus.html#humongolus.field.Boolean">[docs]</a><span class="k">class</span> <span class="nc">Boolean</span><span class="p">(</span><span class="n">Field</span><span class="p">):</span>
+    <span class="n">__default__</span> <span class="o">=</span> <span class="bp">False</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;widget&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;widget&#39;</span><span class="p">,</span> <span class="n">CheckBox</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Boolean</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">__clean__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="n">ex</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">Boolean</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__clean__</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__error__</span> <span class="o">=</span> <span class="n">e</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&quot;Not a boolean&quot;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="Regex"><a class="viewcode-back" href="../../humongolus.html#humongolus.field.Regex">[docs]</a><span class="k">class</span> <span class="nc">Regex</span><span class="p">(</span><span class="n">Char</span><span class="p">):</span>
+    <span class="n">__reg__</span> <span class="o">=</span> <span class="bp">None</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">regex</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Regex</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">regex</span><span class="p">,</span> <span class="nb">basestring</span><span class="p">):</span> <span class="n">regex</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="n">regex</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__reg__</span> <span class="o">=</span> <span class="n">regex</span>
+
+    <span class="k">def</span> <span class="nf">__clean__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="n">ex</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">try</span><span class="p">:</span>            
+            <span class="n">value</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">Regex</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__clean__</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">value</span><span class="p">:</span> 
+                <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__reg__</span><span class="o">.</span><span class="n">search</span><span class="p">(</span><span class="n">value</span><span class="p">):</span> <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__errormessage__</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">e</span>
+        <span class="k">return</span> <span class="n">value</span>
+</div>
+<div class="viewcode-block" id="Email"><a class="viewcode-back" href="../../humongolus.html#humongolus.field.Email">[docs]</a><span class="k">class</span> <span class="nc">Email</span><span class="p">(</span><span class="n">Regex</span><span class="p">):</span>
+    <span class="n">email_re</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span>
+    <span class="s">r&quot;(^[-!#$%&amp;&#39;*+/=?^_`{}|~0-9A-Z]+(\.[-!#$%&amp;&#39;*+/=?^_`{}|~0-9A-Z]+)*&quot;</span>  <span class="c"># dot-atom</span>
+    <span class="s">r&#39;|^&quot;([\001-\010\013\014\016-\037!#-\[\]-\177]|</span><span class="se">\\</span><span class="s">[\001-011\013\014\016-\177])*&quot;&#39;</span> <span class="c"># quoted-string</span>
+    <span class="s">r&#39;)@(?:[A-Z0-9-]+\.)+[A-Z]{2,6}$&#39;</span><span class="p">,</span> <span class="n">re</span><span class="o">.</span><span class="n">IGNORECASE</span><span class="p">)</span>  <span class="c"># domain</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;error&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s">u&#39;Enter a valid e-mail address.&#39;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Email</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="n">regex</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">email_re</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        
+        </div>
+<div class="viewcode-block" id="MongoId"><a class="viewcode-back" href="../../humongolus.html#humongolus.field.MongoId">[docs]</a><span class="k">class</span> <span class="nc">MongoId</span><span class="p">(</span><span class="n">Field</span><span class="p">):</span>
+    <span class="n">__clstype__</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">__obj__</span> <span class="o">=</span> <span class="bp">None</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">MongoId</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__clstype__</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;type&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">)</span>
+    
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__value__</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__obj__</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__clstype__</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">__value__</span><span class="p">)</span> <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__obj__</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">__obj__</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__obj__</span>
+        <span class="k">else</span><span class="p">:</span> <span class="k">return</span> <span class="bp">None</span>
+    
+    <span class="k">def</span> <span class="nf">__clean__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="n">ex</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">MongoId</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__clean__</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">value</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">ObjectId</span><span class="p">):</span>
+                    <span class="n">value</span> <span class="o">=</span> <span class="n">value</span>
+                <span class="k">elif</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s">&#39;__id__&#39;</span><span class="p">):</span>
+                    <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="o">.</span><span class="n">__id__</span>
+                <span class="k">elif</span> <span class="n">value</span><span class="p">:</span>
+                    <span class="k">try</span><span class="p">:</span> <span class="n">value</span> <span class="o">=</span> <span class="n">ObjectId</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span> <span class="k">raise</span> <span class="n">e</span> 
+                        
+        <span class="k">except</span><span class="p">:</span> <span class="k">raise</span> <span class="n">e</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__required__</span> <span class="o">==</span> <span class="bp">False</span> <span class="ow">and</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">EMPTY_VALUES</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">ObjectId</span><span class="p">):</span> <span class="k">return</span> <span class="n">value</span>
+        <span class="k">else</span><span class="p">:</span> 
+            <span class="n">ex</span> <span class="o">=</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">u&#39;The value given is not a valid ObjectID&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__error__</span> <span class="o">=</span> <span class="n">ex</span>
+            <span class="k">raise</span> <span class="n">ex</span>
+        <span class="k">return</span> <span class="n">value</span>
+        </div>
+<div class="viewcode-block" id="DynamicType"><a class="viewcode-back" href="../../humongolus.html#humongolus.field.DynamicType">[docs]</a><span class="k">class</span> <span class="nc">DynamicType</span><span class="p">(</span><span class="n">Field</span><span class="p">):</span>
+    <span class="n">__clstype__</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">__obj__</span> <span class="o">=</span> <span class="bp">None</span>
+    
+    <span class="k">def</span> <span class="nf">__call__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__value__</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__clstype__</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">get_class</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__value__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;cls&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__obj__</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__clstype__</span><span class="p">(</span><span class="nb">id</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">__value__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;_id&#39;</span><span class="p">,</span> <span class="bp">None</span><span class="p">))</span> <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">__obj__</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">__obj__</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__obj__</span>
+        <span class="k">else</span><span class="p">:</span> <span class="k">return</span> <span class="bp">None</span>
+    
+    <span class="k">def</span> <span class="nf">__clean__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="s">&#39;__id__&#39;</span><span class="p">):</span> <span class="n">value</span> <span class="o">=</span> <span class="p">{</span><span class="s">&quot;cls&quot;</span><span class="p">:</span><span class="s">&quot;</span><span class="si">%s</span><span class="s">.</span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="p">(</span><span class="n">value</span><span class="o">.</span><span class="n">__module__</span><span class="p">,</span> <span class="n">value</span><span class="o">.</span><span class="n">__class__</span><span class="o">.</span><span class="n">__name__</span><span class="p">),</span> <span class="s">&quot;_id&quot;</span><span class="p">:</span><span class="n">value</span><span class="o">.</span><span class="n">_id</span><span class="p">}</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span> 
+            <span class="k">raise</span> <span class="n">e</span>
+        <span class="k">if</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__required__</span> <span class="o">==</span> <span class="bp">False</span> <span class="ow">and</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">EMPTY_VALUES</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span> <span class="k">return</span> <span class="n">value</span>
+        <span class="k">else</span><span class="p">:</span> 
+            <span class="n">ex</span> <span class="o">=</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">u&#39;The value given is not a valid Document&#39;</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__error__</span> <span class="o">=</span> <span class="n">ex</span>
+            <span class="k">raise</span> <span class="n">ex</span>
+        <span class="k">return</span> <span class="n">value</span>
+</div>
+<div class="viewcode-block" id="model_display"><a class="viewcode-back" href="../../humongolus.html#humongolus.field.model_display">[docs]</a><span class="k">def</span> <span class="nf">model_display</span><span class="p">(</span><span class="n">choice</span><span class="p">):</span>
+    <span class="k">return</span> <span class="p">{</span><span class="s">&#39;value&#39;</span><span class="p">:</span><span class="n">choice</span><span class="o">.</span><span class="n">__id__</span><span class="p">,</span> <span class="s">&#39;display&#39;</span><span class="p">:</span><span class="n">choice</span><span class="o">.</span><span class="n">name</span><span class="p">}</span>
+    
+</div>
+<div class="viewcode-block" id="ModelChoice"><a class="viewcode-back" href="../../humongolus.html#humongolus.field.ModelChoice">[docs]</a><span class="k">class</span> <span class="nc">ModelChoice</span><span class="p">(</span><span class="n">MongoId</span><span class="p">):</span>
+    
+    <span class="n">__choices__</span> <span class="o">=</span> <span class="p">[]</span>
+    
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">kwargs</span><span class="p">[</span><span class="s">&#39;widget&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;widget&#39;</span><span class="p">,</span> <span class="n">Select</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">ModelChoice</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">choices</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__choices__</span>
+    
+<div class="viewcode-block" id="ModelChoice.render"><a class="viewcode-back" href="../../humongolus.html#humongolus.field.ModelChoice.render">[docs]</a>    <span class="k">def</span> <span class="nf">render</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">type</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__kwargs__</span><span class="p">[</span><span class="s">&#39;type&#39;</span><span class="p">]</span>
+        <span class="n">query</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__kwargs__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;query&#39;</span><span class="p">,</span> <span class="p">{})</span>
+        <span class="n">sort</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__kwargs__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;sort&#39;</span><span class="p">,</span> <span class="p">[(</span><span class="s">&#39;_id&#39;</span><span class="p">,</span><span class="mi">1</span><span class="p">)])</span>
+        <span class="n">display</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__kwargs__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;display&#39;</span><span class="p">,</span> <span class="n">model_display</span><span class="p">)</span>
+        <span class="n">value</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__kwargs__</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s">&#39;value&#39;</span><span class="p">,</span> <span class="s">&#39;_id&#39;</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__choices__</span> <span class="o">=</span> <span class="p">[</span><span class="n">display</span><span class="p">(</span><span class="n">choice</span><span class="p">)</span> <span class="k">for</span> <span class="n">choice</span> <span class="ow">in</span> <span class="nb">type</span><span class="o">.</span><span class="n">find</span><span class="p">(</span><span class="n">query</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__kwargs__</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s">&#39;prepend&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__kwargs__</span><span class="p">[</span><span class="s">&#39;prepend&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__choices__</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__choices__</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">__kwargs__</span><span class="p">[</span><span class="s">&#39;prepend&#39;</span><span class="p">]</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">__kwargs__</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s">&#39;append&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__choices__</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">__kwargs__</span><span class="p">[</span><span class="s">&#39;append&#39;</span><span class="p">])</span>
+        <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">ModelChoice</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+</div></div>
+<div class="viewcode-block" id="Date"><a class="viewcode-back" href="../../humongolus.html#humongolus.field.Date">[docs]</a><span class="k">class</span> <span class="nc">Date</span><span class="p">(</span><span class="n">Field</span><span class="p">):</span>
+    
+    <span class="k">def</span> <span class="nf">__clean__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="n">ex</span> <span class="o">=</span> <span class="bp">None</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="nb">super</span><span class="p">(</span><span class="n">Date</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__clean__</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span> <span class="k">raise</span> <span class="n">e</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="p">):</span> <span class="k">return</span> <span class="n">value</span>
+            <span class="k">elif</span> <span class="n">value</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span> 
+                    <span class="n">val</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">val</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span> <span class="k">return</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">fromtimestamp</span><span class="p">(</span><span class="n">val</span><span class="p">)</span>
+                <span class="k">except</span><span class="p">:</span> <span class="k">pass</span>
+                <span class="k">return</span> <span class="n">value</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">EMPTY_VALUES</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">__required__</span><span class="p">:</span>
+                    <span class="n">ex</span> <span class="o">=</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">u&#39;The value given is not a valid datetime object&#39;</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">__error__</span> <span class="o">=</span> <span class="n">ex</span>
+                    <span class="k">raise</span> <span class="n">ex</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">value</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span> <span class="k">raise</span> <span class="n">e</span>
+</div>
+<div class="viewcode-block" id="TimeStamp"><a class="viewcode-back" href="../../humongolus.html#humongolus.field.TimeStamp">[docs]</a><span class="k">class</span> <span class="nc">TimeStamp</span><span class="p">(</span><span class="n">Date</span><span class="p">):</span>
+    
+    <span class="k">def</span> <span class="nf">__setvalue__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">init</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">value</span><span class="p">:</span>
+            <span class="n">value</span> <span class="o">=</span> <span class="n">datetime</span><span class="o">.</span><span class="n">datetime</span><span class="o">.</span><span class="n">utcnow</span><span class="p">()</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">TimeStamp</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__setvalue__</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">init</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="AutoIncrement"><a class="viewcode-back" href="../../humongolus.html#humongolus.field.AutoIncrement">[docs]</a><span class="k">class</span> <span class="nc">AutoIncrement</span><span class="p">(</span><span class="n">Integer</span><span class="p">):</span>
+    
+    <span class="k">def</span> <span class="nf">__setvalue__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">init</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">EMPTY_VALUES</span> <span class="ow">and</span> <span class="n">value</span> <span class="o">!=</span> <span class="s">&#39;increment&#39;</span><span class="p">:</span>
+            <span class="nb">super</span><span class="p">(</span><span class="n">AutoIncrement</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">__setvalue__</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">init</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">__inited__</span> <span class="ow">or</span> <span class="n">value</span> <span class="o">==</span> <span class="s">&#39;increment&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">__value__</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">sequence</span><span class="p">(</span><span class="n">field</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">__name__</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">__inited__</span> <span class="o">=</span> <span class="bp">True</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none">
+  <h3>Quick search</h3>
+    <form class="search" action="../../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    <p class="searchtip" style="font-size: 90%">
+    Enter search terms or a module, class or function name.
+    </p>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li><a href="../../index.html">Humongolus 0 documentation</a> &raquo;</li>
+          <li><a href="../index.html" >Module code</a> &raquo;</li> 
+      </ul>
+    </div>
+    <div class="footer">
+        &copy; Copyright 2012, Christopher Coté.
+      Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.2.
+    </div>
+  </body>
+</html>
