@@ -1,12 +1,11 @@
-humongolus Package
+Humongolus Package
 ==================
 
 :mod:`humongolus` Package
 -------------------------
 
 .. automodule:: humongolus.__init__
-    :members: Document, Field, Widget, List, Lazy
-    :undoc-members:
+    :members: Document, Field, Widget, List, Lazy, FieldValidator, DocumentException, FieldException
     :show-inheritance:
 
 :mod:`field` Module

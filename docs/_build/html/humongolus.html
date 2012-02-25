@@ -8,7 +8,7 @@
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     
-    <title>humongolus Package &mdash; Humongolus 0 documentation</title>
+    <title>Humongolus Package &mdash; Humongolus 0 documentation</title>
     
     <link rel="stylesheet" href="_static/default.css" type="text/css" />
     <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -51,7 +51,7 @@
           <div class="body">
             
   <div class="section" id="humongolus-package">
-<h1>humongolus Package<a class="headerlink" href="#humongolus-package" title="Permalink to this headline">¶</a></h1>
+<h1>Humongolus Package<a class="headerlink" href="#humongolus-package" title="Permalink to this headline">¶</a></h1>
 <div class="section" id="id1">
 <h2><tt class="xref py py-mod docutils literal"><span class="pre">humongolus</span></tt> Package<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h2>
 <span class="target" id="module-humongolus.__init__"></span><p>Humongolus is a Persistence and Widget Framework for MongoDB written in Python</p>
@@ -175,11 +175,6 @@ Should always return the &#8220;cleaned&#8221; value or raise a FieldException o
 </table>
 </dd></dl>
 
-<dl class="attribute">
-<dt id="humongolus.__init__.Field.logger">
-<tt class="descname">logger</tt><em class="property"> = None</em><a class="headerlink" href="#humongolus.__init__.Field.logger" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
 <dl class="method">
 <dt id="humongolus.__init__.Field.render">
 <tt class="descname">render</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/humongolus/__init__.html#Field.render"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.__init__.Field.render" title="Permalink to this definition">¶</a></dt>
@@ -230,16 +225,6 @@ Should always return the &#8220;cleaned&#8221; value or raise a FieldException o
 <dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">list</span></tt></p>
 <p>Used to describe an array in a :class: <cite>~Document</cite> or :class: <cite>~EmbeddedDocument</cite>. Extends list.</p>
 <dl class="method">
-<dt id="humongolus.__init__.List.append">
-<tt class="descname">append</tt><big>(</big><em>obj</em><big>)</big><a class="reference internal" href="_modules/humongolus/__init__.html#List.append"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.__init__.List.append" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="attribute">
-<dt id="humongolus.__init__.List.logger">
-<tt class="descname">logger</tt><em class="property"> = None</em><a class="headerlink" href="#humongolus.__init__.List.logger" title="Permalink to this definition">¶</a></dt>
-<dd></dd></dl>
-
-<dl class="method">
 <dt id="humongolus.__init__.List.render">
 <tt class="descname">render</tt><big>(</big><em>*args</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="_modules/humongolus/__init__.html#List.render"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.__init__.List.render" title="Permalink to this definition">¶</a></dt>
 <dd><p>Override to customize output</p>
@@ -260,6 +245,49 @@ Should always return the &#8220;cleaned&#8221; value or raise a FieldException o
 <p>The default returns self.__repr__() unless a widget is available then calls render on the widget.</p>
 </dd></dl>
 
+</dd></dl>
+
+<dl class="class">
+<dt id="humongolus.__init__.FieldValidator">
+<em class="property">class </em><tt class="descclassname">humongolus.__init__.</tt><tt class="descname">FieldValidator</tt><big>(</big><em>obj</em><big>)</big><a class="reference internal" href="_modules/humongolus/__init__.html#FieldValidator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.__init__.FieldValidator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Base class for custom field validation. Should always be extended.</p>
+<dl class="method">
+<dt id="humongolus.__init__.FieldValidator.validate">
+<tt class="descname">validate</tt><big>(</big><em>val</em>, <em>doc=None</em><big>)</big><a class="reference internal" href="_modules/humongolus/__init__.html#FieldValidator.validate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.__init__.FieldValidator.validate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Override this method to apply custom validation for a field.</p>
+<p>self.obj is the Model attribute being set.</p>
+<p>through self.obj you have access to attributes _parent and _base
+_parent is the Document|EmbeddedDocument containing the current field
+_base is the base Document object if available</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters :</th><td class="field-body"><ul class="first last simple">
+<li><cite>val</cite>: incoming value from a form or other assignment</li>
+<li><cite>doc</cite>: a dictionary available if using the Form system. The dictionary will contain all keys passed to the Form object on instantiation</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="exception">
+<dt id="humongolus.__init__.DocumentException">
+<em class="property">exception </em><tt class="descclassname">humongolus.__init__.</tt><tt class="descname">DocumentException</tt><big>(</big><em>errors</em><big>)</big><a class="reference internal" href="_modules/humongolus/__init__.html#DocumentException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.__init__.DocumentException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></tt></p>
+<p>Exception thrown when an error/errors are raised when saving a Document</p>
+</dd></dl>
+
+<dl class="exception">
+<dt id="humongolus.__init__.FieldException">
+<em class="property">exception </em><tt class="descclassname">humongolus.__init__.</tt><tt class="descname">FieldException</tt><a class="reference internal" href="_modules/humongolus/__init__.html#FieldException"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#humongolus.__init__.FieldException" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">exceptions.Exception</span></tt></p>
+<p>Exception for field validation errors.</p>
 </dd></dl>
 
 </div>
@@ -610,7 +638,7 @@ Should always return the &#8220;cleaned&#8221; value or raise a FieldException o
         <div class="sphinxsidebarwrapper">
   <h3><a href="index.html">Table Of Contents</a></h3>
   <ul>
-<li><a class="reference internal" href="#">humongolus Package</a><ul>
+<li><a class="reference internal" href="#">Humongolus Package</a><ul>
 <li><a class="reference internal" href="#id1"><tt class="docutils literal"><span class="pre">humongolus</span></tt> Package</a></li>
 <li><a class="reference internal" href="#module-humongolus.field"><tt class="docutils literal"><span class="pre">field</span></tt> Module</a></li>
 <li><a class="reference internal" href="#module-humongolus.settings"><tt class="docutils literal"><span class="pre">settings</span></tt> Module</a></li>
