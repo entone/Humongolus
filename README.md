@@ -8,6 +8,7 @@ Google Group: http://groups.google.com/group/humongolus
 * Full MongoDB Index Support
 * Dirty Updating (only send changes to db)
 * Full Test Suite (97% code coverage)
+* Documentation
 * Exposes default MongoDB cursors 
 * HTML Widget System
 * Robust HTML Form Handling (rendering and validation)
@@ -37,7 +38,7 @@ Google Group: http://groups.google.com/group/humongolus
     * Tutorials
     * Plugins
 
-#### Usage
+#### Usage also see test.py and tests/test_field.py for more usage examples.
 
     from pymongo.connection import Connection
     import logging
