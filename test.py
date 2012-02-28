@@ -46,6 +46,12 @@ class Job(orm.EmbeddedDocument):
 def coll_display(doc):
     return {'value':doc.get('abbrv'), 'display':doc.get('fullname', None)}
 
+def job_list(obj):
+    ar = []
+    for i in obj:
+        ar.append({"value":i.title, "display":"%s: %s" % (i.employer, i.title)})
+    return ar
+
 class Human(orm.Document):
     _db = "test"
     _collection = "humans"
@@ -54,7 +60,7 @@ class Human(orm.Document):
     age = field.Integer(required=True, min=0, max=3000)
     height = field.Float(min=1, max=100000)
     weight = field.Float(min=1, max=30000)
-    jobs = orm.List(type=Job)
+    jobs = orm.List(type=Job, render=job_list)
     genitalia = field.Char()
     location = Location()
     car = field.ModelChoice(type=Car, widget=widget.Select, render=car_disp)
@@ -151,13 +157,14 @@ class PersonForm(widget.Form):
     _action = '/save_person'
     _id = "person_%s" % chris._id
     #if anyone knows a better way to maintain the order of the fields, please let me know!
-    _fields = ["human_id", "name", "age", "car", "location"]
+    _fields = ["human_id", "name", "age", "car", "location", "jobs"]
 
     human_id = widget.FormField(widget=widget.Input, label="ID")
     name = widget.FormField(widget=widget.Input, label="Name")
     age = widget.FormField(widget=widget.Input, label="Age", description="This is today minus the date you were born in seconds.")
     car = widget.FormField(label="Car")
     location = widget.FormField(widget=LocationForm, label="Location")
+    jobs = widget.FormField(widget=widget.MultipleSelect, label="Jobs")
 
 submit = {
     "name":"None",

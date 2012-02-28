@@ -249,6 +249,8 @@ class Lazy(object):
     _name = None
     _widget = None
     _dbkey = None
+    _render = None
+    _choices = []
 
     def __init__(self, *args, **kwargs):
         """
@@ -309,6 +311,7 @@ class List(list):
     _parent = None
     _name = None
     _widget = None
+    _render = None
     __kwargs__ = {}
     __args__ = ()
 
@@ -384,6 +387,10 @@ class List(list):
         The default returns self.__repr__() unless a widget is available then calls render on the widget.
 
         """
+        print "RENDER: %s" % self.render
+        if self._render:
+            self._choices = self._render(obj=self)
+        else: self._choices = [i for i in self]
         self._widget = kwargs.get("widget", self._widget)
         if self._widget: return self._widget(self).render(*args, **kwargs)
         return self.__repr__()

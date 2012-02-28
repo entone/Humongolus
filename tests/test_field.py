@@ -525,7 +525,7 @@ class Widget(unittest.TestCase):
         self.car.model = "Rodeo"
         self.car.year = datetime.datetime(2007, 1, 1)
         self.text_html= "<input type='text' id='id_make' name='make' value='Isuzu' class='red checked'  />"
-        self.choice_html = "<select id='id_car' name='car' class='Woot'><option value='%s'>Isuzu Rodeo 2007-01-01 00:00:00</option></select>"
+        self.choice_html = "<select id='id_car' name='car' class='Woot'><option value='%s' >Isuzu Rodeo 2007-01-01 00:00:00</option></select>"
         self.object_html = """<ul class='test'>
                     <li>Make: Isuzu</li>
                     <li>Model: Rodeo</li>

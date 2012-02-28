@@ -42,7 +42,23 @@ class Select(Input):
         for i in self._object._choices:
             val = i['value'] if isinstance(i, dict) else i
             display = i['display'] if isinstance(i, dict) else i
-            ch.append("<option value='%s'>%s</option>" % (val, display))
+            sel = "selected='SELECTED'" if val == self._object._value else ""
+            ch.append("<option value='%s' %s>%s</option>" % (val, sel, display))
+        
+        return "%s%s</select>" % (st, "".join(ch))
+
+class MultipleSelect(Input):
+
+    def render(self, *args, **kwargs):
+        val = super(MultipleSelect, self).render(*args, **kwargs)
+        st = "<select id='%s' name='%s' class='%s' multiple='multiple'>" % (self._id, self._name, self._cls)
+        ch = []
+        print len(self._object._choices)
+        for i in self._object._choices:
+            val = i['value'] if isinstance(i, dict) else i
+            display = i['display'] if isinstance(i, dict) else i
+            sel = "selected='SELECTED'" if val in self._object else ""
+            ch.append("<option value='%s' %s>%s</option>" % (val, sel, display))
         
         return "%s%s</select>" % (st, "".join(ch))
 

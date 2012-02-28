@@ -31,7 +31,7 @@ class Char(Field):
     _max=None
     _min=None
     _type = unicode
-    _display = "string"
+    _exception_display = "string"
 
     def clean(self, val, doc=None):
         try:            
@@ -40,11 +40,11 @@ class Char(Field):
             if self._min != None and len(val) < self._min: raise MinException("must be greater than %s" % self._min)
             return val
         except FieldException as e: raise e
-        except: raise FieldException("%s is not a valid %s" % (val, self._display))
+        except: raise FieldException("%s is not a valid %s" % (val, self._exception_display))
 
 class Integer(Char):
     _type=int
-    _display="integer"
+    _exception_display ="integer"
 
     def clean(self, val, doc=None):
         try:
@@ -54,11 +54,11 @@ class Integer(Char):
                 if self._min != None and val < self._min: raise MinException("must be greater than %s" % self._min)
             return val
         except FieldException as e: raise e
-        except: raise FieldException("%s is not a valid %s" % (val, self._display))
+        except: raise FieldException("%s is not a valid %s" % (val, self._exception_display))
 
 class Float(Integer):
     _type=float
-    _display="float"
+    _exception_display ="float"
 
 class Date(Field):
 
@@ -141,12 +141,6 @@ class DynamicDocument(Field):
         else: raise Exception("Bad Value: %s" % self._value)
 
 
-def model_display(obj):
-    return {"value":obj._id, "display":unicode(obj)}
-
-def collection_display(obj):
-    return {"value":obj.get("_id", None), "display":obj}
-
 class Choice(Char):
     _choices = []
 
@@ -158,32 +152,35 @@ class Choice(Char):
 
 class ModelChoice(DocumentId):
     _type = None
-    _render = model_display
+    _render = None
     _fields = None
     _query = {}
     _sort = {}
 
     def render(self, **kwargs):
-        cur = self._type.find(self._query, fields=self._fields)
-        cur = cur.sort(self._sort) if self._sort else cur
-        self._choices = [self._render(i) for i in cur]
-        return super(ModelChoice, self).render(**kwargs)
+        if self._render:
+            cur = self._type.find(self._query, fields=self._fields)
+            cur = cur.sort(self._sort) if self._sort else cur
+            self._choices = [self._render(i) for i in cur]
+            return super(ModelChoice, self).render(**kwargs)
+        else: raise FieldException("no render method available")
 
 class CollectionChoice(Choice):
     _db = None
     _collection = None
-    _render = collection_display
+    _render = None
     _fields = None
     _query = {}
     _sort = {}
 
     def render(self, **kwargs):
-        cur = self._conn[self._db][self._collection].find(self._query, fields=self._fields)
-        cur = cur.sort(self._sort) if self._sort else cur
-        self._choices = [self._render(i) for i in cur]
-        return super(CollectionChoice, self).render(**kwargs)
+        if self._render:
+            cur = self._conn[self._db][self._collection].find(self._query, fields=self._fields)
+            cur = cur.sort(self._sort) if self._sort else cur
+            self._choices = [self._render(i) for i in cur]
+            return super(CollectionChoice, self).render(**kwargs)
+        else: raise FieldException("no render method available")
         
-
 class Regex(Char):
     _reg = None
     _disp_error = None
