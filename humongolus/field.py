@@ -158,7 +158,7 @@ class Choice(Char):
 
 class ModelChoice(DocumentId):
     _type = None
-    _display = model_display
+    _render = model_display
     _fields = None
     _query = {}
     _sort = {}
@@ -166,21 +166,21 @@ class ModelChoice(DocumentId):
     def render(self, **kwargs):
         cur = self._type.find(self._query, fields=self._fields)
         cur = cur.sort(self._sort) if self._sort else cur
-        self._choices = [self._display(i) for i in cur]
+        self._choices = [self._render(i) for i in cur]
         return super(ModelChoice, self).render(**kwargs)
 
 class CollectionChoice(Choice):
     _db = None
     _collection = None
-    _display = collection_display
+    _render = collection_display
     _fields = None
     _query = {}
     _sort = {}
 
     def render(self, **kwargs):
-        cur = self.self._conn[self._db][self._collection].find(self._query, fields=self._fields)
+        cur = self._conn[self._db][self._collection].find(self._query, fields=self._fields)
         cur = cur.sort(self._sort) if self._sort else cur
-        self._choices = [self._display(i) for i in cur]
+        self._choices = [self._render(i) for i in cur]
         return super(CollectionChoice, self).render(**kwargs)
         
 

@@ -4,6 +4,7 @@ import humongolus as orm
 import datetime
 import humongolus.field as field
 import humongolus.widget as widget
+from tests.states import states
 
 conn = Connection()
 FORMAT = '%(asctime)-15s %(message)s'
@@ -42,6 +43,9 @@ class Job(orm.EmbeddedDocument):
     title = field.Char(required=True)
     locations = orm.List(type=Location)
 
+def coll_display(doc):
+    return {'value':doc.get('abbrv'), 'display':doc.get('fullname', None)}
+
 class Human(orm.Document):
     _db = "test"
     _collection = "humans"
@@ -53,7 +57,9 @@ class Human(orm.Document):
     jobs = orm.List(type=Job)
     genitalia = field.Char()
     location = Location()
-    car = field.ModelChoice(type=Car, widget=widget.Select, display=car_disp)
+    car = field.ModelChoice(type=Car, widget=widget.Select, render=car_disp)
+    color = field.Choice(choices=[{'value':'red', 'display':'Red'},{'value':'blue', 'display':'Blue'},{'value':'green', 'display':'Green'}])
+    state = field.CollectionChoice(db='test', collection='states', render=coll_display, sort=[('fullname',1)])
 
 class Female(Human):
     genitalia = field.Char(default='inny')
@@ -165,6 +171,24 @@ submit = {
     "location-address-street2":"450",
     #"location-address-zip":"60626"
 }
+
+
+print states
+conn['test']['states'].remove()
+for k,v in states.iteritems():
+    conn['test']['states'].insert({"abbrv":k, 'fullname':v})
+    
+
+class SelectorForm(widget.Form):
+    _fields = ['car', 'color', 'state']
+    car = widget.FormField(display="Car", widget=widget.Select)
+    color = widget.FormField(display="Color", widget=widget.Select)
+    state = widget.FormField(display="State", widget=widget.Select)
+
+print "SELECTS:"
+
+a = SelectorForm(obj=chris)
+print a.render()
 
 form = PersonForm(obj=chris, data=submit)
 

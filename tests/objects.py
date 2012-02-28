@@ -89,7 +89,7 @@ class BadHuman(Human):
     unique = field.Integer()
     phone = field.Phone()
     email = field.Email(dbkey="em")
-    car = field.ModelChoice(type=Car, widget=widget.Select, display=car_disp)
+    car = field.ModelChoice(type=Car, widget=widget.Select, render=car_disp)
     active = field.Boolean(widget=widget.CheckBox)
     state = field.Char(validate=StateValidator)
     country = field.Char(validate=orm.FieldValidator)
