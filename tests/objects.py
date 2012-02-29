@@ -29,7 +29,7 @@ class Human(orm.Document):
         orm.Index("geo_location", key=[("jobs.locations.geo", orm.Index.GEO2D)])
     ]
     human_id = field.AutoIncrement(collection="human")
-    name = field.Char(required=True, min=2, max=25, widget=orm.Widget)
+    name = field.Char(required=True, min=2, max=25)
     age = field.Integer(min=0, max=3000)
     height = field.Float(min=1, max=100000)
     weight = field.Float(min=1)
@@ -89,8 +89,8 @@ class BadHuman(Human):
     unique = field.Integer()
     phone = field.Phone()
     email = field.Email(dbkey="em")
-    car = field.ModelChoice(type=Car, widget=widget.Select, render=car_disp)
-    active = field.Boolean(widget=widget.CheckBox)
+    car = field.ModelChoice(type=Car)
+    active = field.Boolean()
     state = field.Char(validate=StateValidator)
     country = field.Char(validate=orm.FieldValidator)
     location = Loca()
@@ -102,15 +102,15 @@ Human.cars = orm.Lazy(type=Car, key='owner')
 class AddressForm(widget.FieldSet):
     _fields = ["street", "street2", "zip"]
 
-    street = widget.FormField(widget=widget.Input)
-    street2 = widget.FormField(widget=widget.Input)
-    zip = widget.FormField(widget=widget.Input)
+    street = widget.Input()
+    street2 = widget.Input()
+    zip = widget.Input()
 
 class LocationForm(widget.FieldSet):
     _fields = ["city"]
     _cls = "location"
 
-    city = widget.FormField(widget=widget.Input)
+    city = widget.Input()
 
 class PersonForm(widget.Form):
     _action = '/save_person'
@@ -118,7 +118,7 @@ class PersonForm(widget.Form):
     #if anyone knows a better way to maintain the order of the fields, please let me know!
     _fields = ["human_id", "name", "age", "location"]
 
-    human_id = widget.FormField(widget=widget.Input, label="ID")
-    name = widget.FormField(widget=widget.Input, label="Name")
-    age = widget.FormField(widget=widget.Input, label="Age", description="This is today minus the date you were born in seconds.")
-    location = widget.FormField(widget=LocationForm, label="Location")
+    human_id = widget.Input(label="ID")
+    name = widget.Input(label="Name")
+    age = widget.Input(label="Age", description="This is today minus the date you were born in seconds.")
+    location = LocationForm(label="Location")

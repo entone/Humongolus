@@ -4,7 +4,7 @@ import humongolus as orm
 import datetime
 import humongolus.field as field
 import humongolus.widget as widget
-from tests.states import states
+from states import states
 
 conn = Connection()
 FORMAT = '%(asctime)-15s %(message)s'
@@ -12,9 +12,6 @@ logging.basicConfig(format=FORMAT)
 logger = logging.getLogger("humongolus")
 
 orm.settings(logger=logger, db_connection=conn)
-
-def car_disp(car):
-    return {"value":car._id, "display":"%s %s %s" % (car.make, car.model, car.year)}
 
 class Car(orm.Document):
     _db = "test"
@@ -43,14 +40,6 @@ class Job(orm.EmbeddedDocument):
     title = field.Char(required=True)
     locations = orm.List(type=Location)
 
-def coll_display(doc):
-    return {'value':doc.get('abbrv'), 'display':doc.get('fullname', None)}
-
-def job_list(obj):
-    ar = []
-    for i in obj:
-        ar.append({"value":i.title, "display":"%s: %s" % (i.employer, i.title)})
-    return ar
 
 class Human(orm.Document):
     _db = "test"
@@ -60,12 +49,12 @@ class Human(orm.Document):
     age = field.Integer(required=True, min=0, max=3000)
     height = field.Float(min=1, max=100000)
     weight = field.Float(min=1, max=30000)
-    jobs = orm.List(type=Job, render=job_list)
+    jobs = orm.List(type=Job)
     genitalia = field.Char()
     location = Location()
-    car = field.ModelChoice(type=Car, widget=widget.Select, render=car_disp)
+    car = field.ModelChoice(type=Car)
     color = field.Choice(choices=[{'value':'red', 'display':'Red'},{'value':'blue', 'display':'Blue'},{'value':'green', 'display':'Green'}])
-    state = field.CollectionChoice(db='test', collection='states', render=coll_display, sort=[('fullname',1)])
+    state = field.CollectionChoice(db='test', collection='states', sort=[('fullname',1)])
 
 class Female(Human):
     genitalia = field.Char(default='inny')
@@ -130,28 +119,33 @@ c_id = car2.save()
 
 print car._get("owner")().name
 
-print car._get("make").render(widget=widget.Input, cls="red checked")
 
-print car.render(widget=CarDisplay, cls='test')
+def car_disp(car):
+    return {"value":car._id, "display":"%s %s %s" % (car.make, car.model, car.year)}
 
-#we've already passed the widget in with the model instantiation
-print chris._get("car").render(cls="Woot")
+def coll_display(doc):
+    return {'value':doc.get('abbrv'), 'display':doc.get('fullname', None)}
 
+def job_list(obj):
+    ar = []
+    for i in obj:
+        ar.append({"value":i.title, "display":"%s: %s" % (i.employer, i.title)})
+    return ar
 
 class AddressForm(widget.FieldSet):
     _fields = ["street", "street2", "zip"]
 
-    street = widget.FormField(widget=widget.Input)
-    street2 = widget.FormField(widget=widget.Input)
-    zip = widget.FormField(widget=widget.Input)
+    street = widget.Input(cls="woot")
+    street2 = widget.Input()
+    zip = widget.Input()
 
 class LocationForm(widget.FieldSet):
     _fields = ["city", "state", "address"]
     _cls = "location"
 
-    city = widget.FormField(widget=widget.Input)
-    state = widget.FormField(widget=widget.Input)
-    address = widget.FormField(widget=AddressForm)
+    city = widget.Input()
+    state = widget.Input()
+    address = AddressForm()
 
 class PersonForm(widget.Form):
     _action = '/save_person'
@@ -159,12 +153,12 @@ class PersonForm(widget.Form):
     #if anyone knows a better way to maintain the order of the fields, please let me know!
     _fields = ["human_id", "name", "age", "car", "location", "jobs"]
 
-    human_id = widget.FormField(widget=widget.Input, label="ID")
-    name = widget.FormField(widget=widget.Input, label="Name")
-    age = widget.FormField(widget=widget.Input, label="Age", description="This is today minus the date you were born in seconds.")
-    car = widget.FormField(label="Car")
-    location = widget.FormField(widget=LocationForm, label="Location")
-    jobs = widget.FormField(widget=widget.MultipleSelect, label="Jobs")
+    human_id = widget.Input(label="ID")
+    name = widget.Input(label="Name")
+    age = widget.Input(label="Age", description="This is today minus the date you were born in seconds.")
+    car = widget.Select(label="Car", render=car_disp)
+    location = LocationForm(label="Location")
+    jobs = widget.MultipleSelect(label="Jobs", render=job_list)
 
 submit = {
     "name":"None",
@@ -179,7 +173,6 @@ submit = {
     #"location-address-zip":"60626"
 }
 
-
 print states
 conn['test']['states'].remove()
 for k,v in states.iteritems():
@@ -188,20 +181,16 @@ for k,v in states.iteritems():
 
 class SelectorForm(widget.Form):
     _fields = ['car', 'color', 'state']
-    car = widget.FormField(display="Car", widget=widget.Select)
-    color = widget.FormField(display="Color", widget=widget.Select)
-    state = widget.FormField(display="State", widget=widget.Select)
+    car = widget.Select(label="Car", render=car_disp)
+    color = widget.Select(label="Color")
+    state = widget.Select(label="State", render=coll_display)
 
 print "SELECTS:"
 
-a = SelectorForm(obj=chris)
+a = SelectorForm(object=chris)
 print a.render()
 
-form = PersonForm(obj=chris, data=submit)
-
-for f in form:
-    print f.label()
-    print f.render(cls="popup")
+form = PersonForm(object=chris, data=submit)
 
 print form.car.render(cls="try-this")
 

@@ -150,6 +150,9 @@ class Choice(Char):
         if not v in vals: raise FieldException("%s is not a valid option")
         return val
 
+    def get_choices(self, render=None):
+        return self._choices
+
 class ModelChoice(DocumentId):
     _type = None
     _render = None
@@ -157,12 +160,11 @@ class ModelChoice(DocumentId):
     _query = {}
     _sort = {}
 
-    def render(self, **kwargs):
-        if self._render:
+    def get_choices(self, render=None):
+        if render:
             cur = self._type.find(self._query, fields=self._fields)
             cur = cur.sort(self._sort) if self._sort else cur
-            self._choices = [self._render(i) for i in cur]
-            return super(ModelChoice, self).render(**kwargs)
+            return [render(i) for i in cur]
         else: raise FieldException("no render method available")
 
 class CollectionChoice(Choice):
@@ -173,12 +175,13 @@ class CollectionChoice(Choice):
     _query = {}
     _sort = {}
 
-    def render(self, **kwargs):
-        if self._render:
+    def get_choices(self, render=None):
+        if render:
+            print self._db
+            print self._collection
             cur = self._conn[self._db][self._collection].find(self._query, fields=self._fields)
             cur = cur.sort(self._sort) if self._sort else cur
-            self._choices = [self._render(i) for i in cur]
-            return super(CollectionChoice, self).render(**kwargs)
+            return [render(i) for i in cur]
         else: raise FieldException("no render method available")
         
 class Regex(Char):

@@ -92,8 +92,11 @@ class Widget(object):
     When extending this class any variables beginning with _ are able to be set with kwargs when instanting
     """
     _object = None
+    errors = []
+    __args__ = []
+    __kwargs__ = {}
 
-    def __init__(self, obj, **kwargs):
+    def __init__(self, *args, **kwargs):
         """Create a new instance of a widget
         This is generally handled automatically when using the Form system
 
@@ -101,12 +104,37 @@ class Widget(object):
             - `obj`: the object to render the widget with
             - `**kwargs`: will attempt to match and set  private(_) class attributes
         """
-        self._object = obj
+        self.__args__ = args
+        self.__kwargs__ = kwargs
+        self.errors = []
         for k,v in kwargs.iteritems():
             try:
                 setattr(self, "_%s" % k, v)
             except: pass
-    
+
+        for k,v in self.__class__._getfields().iteritems():
+            v.__kwargs__['name'] = k
+            n_obj = v.__class__(*v.__args__, **v.__kwargs__)
+            try:
+                n_obj._object = self._object._get(k)
+            except:
+                pass
+                
+            self.__dict__[k] = n_obj
+
+    @classmethod
+    def _getfields(cls):
+        fields = {}
+        for k,v in cls.__dict__.iteritems():
+            if isinstance(v, Widget): fields[k]=v
+
+        for i in cls.__bases__:
+            try:
+                fields.update(i._getfields())
+            except:pass
+        return fields
+        if self._object: self._object.render()
+
     def clean(self, val, doc=None):
         """Override to apply custom parsing of form data. 
         This is called anytime you set the value of a Field.
@@ -146,10 +174,8 @@ class Field(object):
     _dirty = None
     _default = None
     _required = False
-    _display = None
     _error = None
     _dbkey = None
-    _widget = None
     _base = None
     _parent = None
     _validate = None
@@ -174,7 +200,6 @@ class Field(object):
     def _clean(self, val, dirty=None, doc=None):
         self._error = None
         self._isrequired(val)
-        val = self._widget(self).clean(val, doc=doc) if self._widget else val
         val = self.clean(val, doc=doc)
         val = self._validate(self).validate(val, doc=doc) if self._validate else val 
         self._dirty = self._value if not dirty else dirty
@@ -218,15 +243,7 @@ class Field(object):
         except Exception as e:
             self._error = e
     
-    def render(self, *args, **kwargs):
-        """Override to customize output
-
-        The default returns the fields value unless a widget is available then calls render on the widget.
-
-        """
-        self._widget = kwargs.get("widget", self._widget)
-        if self._widget: return self._widget(self).render(*args, **kwargs)
-        return self._value
+    def render(self, *args, **kwargs): pass
     
     def __repr__(self):
         return self.__str__()
@@ -247,7 +264,6 @@ class Lazy(object):
     _base = None
     _parent = None
     _name = None
-    _widget = None
     _dbkey = None
     _render = None
     _choices = []
@@ -282,15 +298,7 @@ class Lazy(object):
     def _map(self, *args, **kwargs): pass
     def _json(self, *args, **kwargs): pass
 
-    def render(self, *args, **kwargs):
-        """Override to customize output
-
-        The default returns self.__repr__() unless a widget is available then calls render on the widget.
-
-        """
-        self._widget = kwargs.get("widget", self._widget)
-        if self._widget: return self._widget(self).render(*args, **kwargs)
-        return self.__repr__()
+    def render(self, *args, **kwargs): pass
 
     def __repr__(self):
         return self.__str__()
@@ -310,7 +318,6 @@ class List(list):
     _base = None
     _parent = None
     _name = None
-    _widget = None
     _render = None
     __kwargs__ = {}
     __args__ = ()
@@ -381,19 +388,10 @@ class List(list):
         
         return ret
     
-    def render(self, *args, **kwargs):
-        """Override to customize output
-
-        The default returns self.__repr__() unless a widget is available then calls render on the widget.
-
-        """
-        print "RENDER: %s" % self.render
-        if self._render:
-            self._choices = self._render(obj=self)
-        else: self._choices = [i for i in self]
-        self._widget = kwargs.get("widget", self._widget)
-        if self._widget: return self._widget(self).render(*args, **kwargs)
-        return self.__repr__()
+    def get_choices(self, render=None):        
+        if render:
+            return render(obj=self)
+        else: return [i for i in self]
 
     def __repr__(self):
         return self.__str__()
@@ -410,7 +408,6 @@ class base(dict):
     _base = None
     _parent = None
     _name = None
-    _widget = None
     _dbkey = None
     __kwargs__ = {}
     __args__ = ()
@@ -507,10 +504,7 @@ class base(dict):
         
         return obj
     
-    def render(self, *args, **kwargs):
-        self._widget = kwargs.get("widget", self._widget)
-        if self._widget: return self._widget(self).render(*args, **kwargs)
-        return self.__repr__()
+    def render(self): pass
 
     def __repr__(self):
         return self.__str__()

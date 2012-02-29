@@ -170,11 +170,6 @@ class Field(unittest.TestCase):
             car3.save()
             print cm.exception.errors
 
-    def test_render(self):
-        self.obj.name = self.name
-        self.obj.age = 27
-        self.assertEqual(self.obj._get("age").render(), 27)
-
     def test_geo(self):
         loc = objects.LocationGeo()
         print loc._json()
@@ -218,8 +213,6 @@ class Field(unittest.TestCase):
         obj.phone = "sjkdhfkjshdfksjhdf"
         print obj._get("phone")
         self.assertEqual(obj._get("phone")._error.__class__.__name__, "FieldException")
-
-
 
         obj.phone = "810-542.0141"
         self.assertEqual(obj.phone, u"+18105420141")
@@ -369,11 +362,8 @@ class Document(unittest.TestCase):
         print self.obj.name
         print unicode(self.obj.name)
         print unicode(self.obj._get("name"))
-        print self.obj._get("name").render(widget=orm.Widget)
-        print self.obj.cars.render()
+        print orm.Widget(object=self.obj._get("name"), name="name").render()
         print unicode(self.obj.cars)
-        print self.obj.jobs.render()
-        print self.obj.render()
 
     def test_json(self):
         self.job.locations.append(self.loc)
@@ -538,29 +528,39 @@ class Widget(unittest.TestCase):
         anne.name = "Anne"
         print anne._get("name").render()
 
+    def test_multiple_select(self):
+        anne = objects.Female()
+        anne.name = "Anne"
+        anne.jobs.append(objects.Job())
+        anne.jobs.append(objects.Job())
+        def yo(obj):
+            for i in obj:
+                return {"value":i.title, "display":i.employer}
+        print widget.MultipleSelect(object=anne.jobs, render=yo).render()
+
     def test_input_render(self):
-        text = self.car._get("make").render(widget=widget.Input, cls="red checked")
+        text = widget.Input(object=self.car._get("make"), name="make").render(cls="red checked")
         self.assertEqual(text.strip(), self.text_html.strip())
     
     def test_choice_render(self):
         _id = self.car.save()
         select = self.choice_html % str(_id)
         obj = objects.BadHuman()
-        text = obj._get("car").render(cls="Woot")
+        text = widget.Select(object=obj._get("car"), render=objects.car_disp, name='car').render(cls="Woot")
         self.assertEqual(text.strip(), select.strip())
 
     def test_object_render(self):
-        text = self.car.render(widget=objects.CarDisplay, cls='test')
+        text = objects.CarDisplay(object=self.car).render(cls='test')
         self.assertEqual(text.strip(), self.object_html.strip())
 
     def test_checkbox(self):
         obj = objects.BadHuman()
-        text = obj._get("active").render()
+        text = widget.CheckBox(object=obj._get("active")).render()
         print text
         with self.assertRaises(Exception) as cm:
             correct = text.index("CHECKED")
         obj.active = True
-        checked = obj._get("active").render()
+        checked = widget.CheckBox(object=obj._get("active")).render()
         print checked
         correct = checked.index("CHECKED")
         self.assertGreater(correct, -1)
@@ -583,7 +583,7 @@ class Form(unittest.TestCase):
         }
     
     def test_form(self):
-        form = objects.PersonForm(obj=self.obj, data=self.submit)
+        form = objects.PersonForm(object=self.obj, data=self.submit)
         form.render()
         with self.assertRaises(orm.DocumentException) as e:
             form.validate()

@@ -4,20 +4,57 @@ from humongolus import Widget, Field, Document, EmbeddedDocument, Lazy, List, Do
 class HTMLElement(Widget):
     _tag = "input"
     _type = "text"
-    _name = None
+    _fields = []
+    _label = None
+    _description = None
+    _name = ""
     _value = None
-    _cls = None
+    _cls = ""
     _extra = None
-    _id = None
+    _id = ""
+
+    def render_fields(self, namespace=None):
+        parts = []
+        for fi in self._fields:
+            try:
+                i = self.__dict__[fi]
+                ns = "-".join([namespace, i._name]) if namespace else i._name
+                if i._label: parts.append(self.render_label(ns, i._label))
+                a = i.render(namespace=ns)
+                if isinstance(a, list): parts.extend(a)
+                else: parts.append(a)
+            except Exception as e:
+                pass
+        
+        return parts
+
+    def render_label(self, name, label):
+        return "<label for='%s'>%s</label>" % (name, label)
+    
+    def label(self):
+        return self.render_label(self._name, self._label)
+    
+    def __getattr__(self, key):
+        try:
+            return self.__dict__["_%s" % key]
+        except:
+            raise AttributeError()
+
+    def __iter__(self):
+        for fi in self._fields:
+            v = self.__dict__[fi]
+            yield v
 
 class Input(HTMLElement):
     
     def render(self, *args, **kwargs):
         self._type = kwargs.get("type", self._type)
-        self._name = kwargs.get("namespace", self._object._name)
+        self._name = kwargs.get("namespace", self._name)
         self._value = kwargs.get("value", self._object.__repr__())
+        self._description = kwargs.get("description", self._description)
         self._id = kwargs.get("id", "id_%s"%self._name) 
         self._cls = kwargs.get("cls", "")
+        self._label = kwargs.get("label", "")
         self._extra = kwargs.get("extra", "")
         return "<%s type='%s' id='%s' name='%s' value='%s' class='%s' %s />" % (self._tag, self._type, self._id, self._name, self._value, self._cls, self._extra)
 
@@ -30,16 +67,17 @@ class CheckBox(Input):
     def render(self, *args, **kwargs):
         extra = "checked='CHECKED'" if self._object._value else ""
         kwargs["extra"] = extra
-        kwargs["value"] = self._object._name
+        kwargs["value"] = self._name
         return super(CheckBox, self).render(*args, **kwargs)
 
 class Select(Input):
+    _render = None
 
     def render(self, *args, **kwargs):
         val = super(Select, self).render(*args, **kwargs)
         st = "<select id='%s' name='%s' class='%s'>" % (self._id, self._name, self._cls)
         ch = []
-        for i in self._object._choices:
+        for i in self._object.get_choices(render=self._render):
             val = i['value'] if isinstance(i, dict) else i
             display = i['display'] if isinstance(i, dict) else i
             sel = "selected='SELECTED'" if val == self._object._value else ""
@@ -53,8 +91,7 @@ class MultipleSelect(Input):
         val = super(MultipleSelect, self).render(*args, **kwargs)
         st = "<select id='%s' name='%s' class='%s' multiple='multiple'>" % (self._id, self._name, self._cls)
         ch = []
-        print len(self._object._choices)
-        for i in self._object._choices:
+        for i in self._object.get_choices(render=self._render):
             val = i['value'] if isinstance(i, dict) else i
             display = i['display'] if isinstance(i, dict) else i
             sel = "selected='SELECTED'" if val in self._object else ""
@@ -62,127 +99,10 @@ class MultipleSelect(Input):
         
         return "%s%s</select>" % (st, "".join(ch))
 
-
-class FormField(object):
-    _widget = None
-    _label = None
-    _cls = None
-    _description = None
-    _object = None
-    _errors = []
-    __kwargs__ = {}
-    __allkwargs__ = {}
     
-    def __init__(self, **kwargs):
-        self._errors = []
-        self._description = None
-        for k,v in kwargs.iteritems():
-            try:
-                setattr(self, "_%s" % k, v)
-            except: pass
-        
-        self.__allkwargs__ = copy.copy(kwargs)
-        kwargs.pop("widget", None)
-        self.__kwargs__ = kwargs
-    
-    def __getattr__(self, key):
-        try:
-            return self.__dict__["_%s"%key]
-        except:
-            try:
-                return getattr(self._object, "_%s"%key)
-            except:
-                raise AttributeError("Invalid attribute: %s" % key)
-        
-        raise AttributeError("Invalid attribute: %s" % key)
-    
-    def render(self, *args, **kwargs):
-        try:
-            ren = self._object.render(*args, **kwargs)
-            try:
-                return "".join(ren)
-            except Exception as e:
-                return ren
-        except:
-            pass
-    
-    def label(self):
-        return "<label for='%s'>%s</label>" % (self.name, self._label)
-
-
-class FormElement(Widget):
-    _fields = []
-    _id = ""
-    _name = ""
-    _cls = ""
-
-    def __init__(self, *args, **kwargs):
-        super(FormElement, self).__init__(*args, **kwargs)
-        if not self._object is None:
-            for k,v in self.__class__._getfields().iteritems():
-                if isinstance(v, FormField):
-                    n_obj = v.__class__(**v.__allkwargs__)
-                    obj = self._object.__dict__[k]
-                    obj._widget = n_obj._widget if n_obj._widget else obj._widget
-                    n_obj._object = obj
-                    self.__dict__[k] = n_obj
-
-    @classmethod
-    def _getfields(cls):
-        fields = {}
-        for k,v in cls.__dict__.iteritems():
-            if isinstance(v, FormField): fields[k]=v
-
-        for i in cls.__bases__:
-            try:
-                fields.update(i._getfields())
-            except:pass
-        return fields
-
-    def render_fields(self, namespace=None):
-        parts = []
-        all_fields = self.__class__._getfields()
-        for fi in self._fields:
-            try:
-                i = all_fields[fi]
-                name = fi
-                widget = i._widget
-                obj = self._object.__dict__.get(name, None)
-                ns = "-".join([namespace, name]) if namespace else name
-                parts.extend(self.render_child(obj, widget, ns, **i.__kwargs__))
-            except Exception as e:
-                pass
-        
-        return parts
-
-    def render_label(self, name, label):
-        return "<label for='%s'>%s</label>" % (name, label)
-
-    def render_child(self, obj, widget, namespace, **kwargs):
-        if isinstance(obj, Field):
-            label = kwargs.get("label", None)
-            a = [self.render_label(namespace, label)] if label else []
-            a.append(obj.render(widget=widget, namespace=namespace, **kwargs))
-            return a
-        else:
-            return obj.render(widget=widget, namespace=namespace, **kwargs)
-    
-    def __iter__(self):
-        for fi in self._fields:
-            v = self.__dict__[fi]
-            yield v
-
-    
-
-
-class FieldSet(FormElement):
+class FieldSet(HTMLElement):
 
     def render(self, *args, **kwargs):
-        for k,v in kwargs.iteritems():
-            try:
-                setattr(self, "_%s"%k, v)
-            except: pass
-
         parts = []
         ns = kwargs.get('namespace')
         st = "<fieldset id='%(id)s' name='%(name)s' class='%(cls)s'>"
@@ -196,7 +116,7 @@ class FieldSet(FormElement):
         parts.append("</fieldset>")
         return parts
 
-class Form(FormElement):
+class Form(HTMLElement):
     #Attributes
     _action = ""
     _method = "POST"
@@ -243,7 +163,6 @@ class Form(FormElement):
                     self.__dict__[k].errors.append(v)
                 self.errors = errors
                 raise DocumentException(errors=errors)
-
 
     def submit(self):
         return "<input type='submit' value='submit' />"
