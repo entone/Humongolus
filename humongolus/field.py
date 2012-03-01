@@ -194,7 +194,7 @@ class Regex(Char):
         return val
 
 class Email(Regex):
-    _disp_rror = "Invalid Email Address"
+    _disp_error = "Invalid Email Address"
     _reg = re.compile(
     r"(^[-!#$%&'*/=?^_`{}|~0-9A-Z]+(\.[-!#$%&'*/=?^_`{}|~0-9A-Z]+)*"  # dot-atom
     r'|^"([\001-\010\013\014\016-\037!#-\[\]-\177]|\\[\001-011\013\014\016-\177])*"' # quoted-string
