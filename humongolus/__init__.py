@@ -92,6 +92,8 @@ class Widget(object):
     When extending this class any variables beginning with _ are able to be set with kwargs when instanting
     """
     _object = None
+    _prepend = None
+    _name = None
     errors = []
     __args__ = []
     __kwargs__ = {}
@@ -113,6 +115,7 @@ class Widget(object):
             except: pass
 
         for k,v in self.__class__._getfields().iteritems():
+            v.__kwargs__['prepend'] = self._prepend
             v.__kwargs__['name'] = k
             n_obj = v.__class__(*v.__args__, **v.__kwargs__)
             try:
@@ -246,7 +249,10 @@ class Field(object):
     def render(self, *args, **kwargs): pass
     
     def __repr__(self):
-        return self.__str__()
+        try:
+            return self._value
+        except:
+            return self.__str__()
 
     def __str__(self):
         return str(self._value)

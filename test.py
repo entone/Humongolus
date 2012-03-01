@@ -4,7 +4,7 @@ import humongolus as orm
 import datetime
 import humongolus.field as field
 import humongolus.widget as widget
-from states import states
+from tests.states import states
 
 conn = Connection()
 FORMAT = '%(asctime)-15s %(message)s'
@@ -150,6 +150,7 @@ class LocationForm(widget.FieldSet):
 class PersonForm(widget.Form):
     _action = '/save_person'
     _id = "person_%s" % chris._id
+    _prepend = "test"
     #if anyone knows a better way to maintain the order of the fields, please let me know!
     _fields = ["human_id", "name", "age", "car", "location", "jobs"]
 
@@ -161,15 +162,15 @@ class PersonForm(widget.Form):
     jobs = widget.MultipleSelect(label="Jobs", render=job_list)
 
 submit = {
-    "name":"None",
-    "human_id":"32226",
-    "age":None,
-    "weight":"175",
-    "car":"ffed81a42000002",
-    "location-city":"Chicago",
-    "location-state":"IL",
-    "location-address-street":"549 Randolph",
-    "location-address-street2":"450",
+    "test_name":"None",
+    "test_human_id":"32226",
+    "test_age":None,
+    "test_weight":"175",
+    "test_car":"ffed81a42000002",
+    "test_location-city":"Chicago",
+    "test_location-state":"IL",
+    "test_location-address-street":"549 Randolph",
+    "test_location-address-street2":"450",
     #"location-address-zip":"60626"
 }
 
@@ -208,12 +209,6 @@ except orm.DocumentException as e:
     print form.errors
     print e.errors
 
+form2 = PersonForm(object=Human())
 
-
-
-
-
-
-
-
-
+print form2.render()
