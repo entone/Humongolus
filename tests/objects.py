@@ -59,7 +59,7 @@ class CarDisplay(orm.Widget):
                     <li>Model: %s</li>
                     <li>Year: %s</li>
                 </ul>
-        """ % (kwargs.get("cls", ""), self._object.make, self._object.model, self._object.year)
+        """ % (kwargs.get("cls", ""), self.object.make, self.object.model, self.object.year)
 
 
 class Scion(Car):

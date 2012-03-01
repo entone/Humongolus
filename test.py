@@ -55,6 +55,7 @@ class Human(orm.Document):
     car = field.ModelChoice(type=Car)
     color = field.Choice(choices=[{'value':'red', 'display':'Red'},{'value':'blue', 'display':'Blue'},{'value':'green', 'display':'Green'}])
     state = field.CollectionChoice(db='test', collection='states', sort=[('fullname',1)])
+    email = field.Email()
 
 class Female(Human):
     genitalia = field.Char(default='inny')
@@ -141,25 +142,26 @@ class AddressForm(widget.FieldSet):
 
 class LocationForm(widget.FieldSet):
     _fields = ["city", "state", "address"]
-    _cls = "location"
+    cls = "location"
 
     city = widget.Input()
     state = widget.Input()
     address = AddressForm()
 
 class PersonForm(widget.Form):
-    _action = '/save_person'
-    _id = "person_%s" % chris._id
+    action = '/save_person'
+    id = "person_%s" % chris._id
     _prepend = "test"
     #if anyone knows a better way to maintain the order of the fields, please let me know!
-    _fields = ["human_id", "name", "age", "car", "location", "jobs"]
+    _fields = ["human_id", "name", "age", "car", "location", "jobs", "email"]
 
     human_id = widget.Input(label="ID")
     name = widget.Input(label="Name")
     age = widget.Input(label="Age", description="This is today minus the date you were born in seconds.")
-    car = widget.Select(label="Car", render=car_disp)
+    car = widget.Select(label="Car", item_render=car_disp)
     location = LocationForm(label="Location")
-    jobs = widget.MultipleSelect(label="Jobs", render=job_list)
+    jobs = widget.MultipleSelect(label="Jobs", item_render=job_list)
+    email = widget.Input(label="Email")
 
 submit = {
     "test_name":"None",
@@ -182,9 +184,9 @@ for k,v in states.iteritems():
 
 class SelectorForm(widget.Form):
     _fields = ['car', 'color', 'state']
-    car = widget.Select(label="Car", render=car_disp)
+    car = widget.Select(label="Car", item_render=car_disp)
     color = widget.Select(label="Color")
-    state = widget.Select(label="State", render=coll_display)
+    state = widget.Select(label="State", item_render=coll_display)
 
 print "SELECTS:"
 
@@ -199,16 +201,20 @@ print form.render()
 
 try:
     form.validate()
+    print "Validated"
 except orm.DocumentException as e:
+    print e
     for f in form:
         if f.errors:
-            print f.name
-            if f.description: print f.description
+            print f.attributes.name
+            if f.attributes.description: print f.attributes.description
             print f.errors
     
     print form.errors
     print e.errors
+except Exception as e:
+    print e
 
-form2 = PersonForm(object=Human())
+form2 = PersonForm(object=Human(), prepend=None)
 
 print form2.render()

@@ -514,8 +514,8 @@ class Widget(unittest.TestCase):
         self.car.make = "Isuzu"
         self.car.model = "Rodeo"
         self.car.year = datetime.datetime(2007, 1, 1)
-        self.text_html= "<input type='text' id='id_make' name='make' value='Isuzu' class='red checked'  />"
-        self.choice_html = "<select id='id_car' name='car' class='Woot'><option value='%s' >Isuzu Rodeo 2007-01-01 00:00:00</option></select>"
+        self.text_html= "<input name='make' value='Isuzu' id='id_make' type='text' class='red checked' />"
+        self.choice_html = "<select class='Woot' id='id_car' name='car' ><option value='%s' >Isuzu Rodeo 2007-01-01 00:00:00</option></select>"
         self.object_html = """<ul class='test'>
                     <li>Make: Isuzu</li>
                     <li>Model: Rodeo</li>
@@ -536,7 +536,7 @@ class Widget(unittest.TestCase):
         def yo(obj):
             for i in obj:
                 return {"value":i.title, "display":i.employer}
-        print widget.MultipleSelect(object=anne.jobs, render=yo).render()
+        print widget.MultipleSelect(object=anne.jobs, item_render=yo).render()
 
     def test_input_render(self):
         text = widget.Input(object=self.car._get("make"), name="make").render(cls="red checked")
@@ -546,7 +546,7 @@ class Widget(unittest.TestCase):
         _id = self.car.save()
         select = self.choice_html % str(_id)
         obj = objects.BadHuman()
-        text = widget.Select(object=obj._get("car"), render=objects.car_disp, name='car').render(cls="Woot")
+        text = widget.Select(object=obj._get("car"), item_render=objects.car_disp, name='car').render(cls="Woot")
         self.assertEqual(text.strip(), select.strip())
 
     def test_object_render(self):
@@ -591,5 +591,5 @@ class Form(unittest.TestCase):
     def test_iterator(self):
         form = objects.PersonForm(obj=self.obj, data=self.submit)
         for f in form:
-            print f.label()
+            print f.label_tag()
             print f.render(cls="popup")

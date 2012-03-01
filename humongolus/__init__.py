@@ -86,40 +86,69 @@ class DocumentException(Exception):
         Exception.__init__(self, "")
         self.errors = errors
 
+class Attributes(object):
+    _id = None
+    _name = None
+    label = None
+    description = None
+    value = None
+    cls = None
+    prepend = None
+    action = ""
+    method = "POST"
+    type = "multipart/form"
+    item_render = None
+    extra = {}
+
+    def __init__(self, **kwargs):
+        self._name = kwargs.pop("name", None)
+        self._id = kwargs.pop("id", None)
+        for k,v in kwargs.iteritems():
+            try:
+                setattr(self, k, v)
+            except: pass
+    
+    @property
+    def name(self):
+        return "%s_%s" % (self.prepend, self._name) if self.prepend else self._name
+
+    @property
+    def id(self):
+        return "%s_%s" % (self.prepend, self._id) if self.prepend else self._id
+
 class Widget(object):
     """Base class for all widgets
-
-    When extending this class any variables beginning with _ are able to be set with kwargs when instanting
     """
-    _object = None
-    _prepend = None
-    _name = None
-    errors = []
     __args__ = []
     __kwargs__ = {}
+    _prepend = None
+    _data = None
+    errors = []
+    attributes = None
+    object = None
 
     def __init__(self, *args, **kwargs):
         """Create a new instance of a widget
         This is generally handled automatically when using the Form system
 
         :Parameters:
-            - `obj`: the object to render the widget with
-            - `**kwargs`: will attempt to match and set  private(_) class attributes
+            - `object`: the object to render the widget with
+            - `**kwargs`: attributes to be applied to the widget
         """
         self.__args__ = args
         self.__kwargs__ = kwargs
+        self.object = kwargs.pop('object', None)
+        self._data = kwargs.pop('data', None)
         self.errors = []
-        for k,v in kwargs.iteritems():
-            try:
-                setattr(self, "_%s" % k, v)
-            except: pass
+        kwargs['prepend'] = self._prepend if self._prepend and not 'prepend' in kwargs else kwargs.pop('prepend', None)
+        self.attributes = Attributes(**kwargs)
 
         for k,v in self.__class__._getfields().iteritems():
-            v.__kwargs__['prepend'] = self._prepend
+            v.__kwargs__['prepend'] = self.attributes.prepend
             v.__kwargs__['name'] = k
             n_obj = v.__class__(*v.__args__, **v.__kwargs__)
             try:
-                n_obj._object = self._object._get(k)
+                n_obj.object = self.object._get(k)
             except:
                 pass
                 
@@ -136,7 +165,6 @@ class Widget(object):
                 fields.update(i._getfields())
             except:pass
         return fields
-        if self._object: self._object.render()
 
     def clean(self, val, doc=None):
         """Override to apply custom parsing of form data. 
@@ -155,7 +183,7 @@ class Widget(object):
         Default returns self._object.__repr__()
 
         """
-        return self._object.__repr__()
+        return self.object.__repr__()
 
 class Field(object):
     """Base class for all Field types
