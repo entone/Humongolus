@@ -17,18 +17,23 @@ class AppHandler(tornado.web.RequestHandler):
         super(AppHandler, self).__init__(*args, **kwargs)
 
     def get(self, *args, **kwargs):
-        #obj = objects.BadHuman()
-        #form = objects.HumanForm(object=obj, action="/", id="test")
+        obj = objects.BadHuman()
+        form = objects.HumanForm(object=obj, action="/", id="test")
         
-        obj2 = objects.BadHuman.find_one({"_id":ObjectId("4f5024f83ffed87f92000002")})
 
-        print obj2._id
-
-        #print obj2.location.address
+        for i in objects.BadHuman.find():
+            obj2 = i
+            break
         
+
+        print obj2.location.address.street
+        if obj2 is None: 
+            print "empty"
+            obj2  = objects.BadHuman()
+
         form2 = objects.HumanForm(object=obj2, prepend='initial', action="/", id="woot")
 
-        return self.render("index.html", form2=form2)
+        return self.render("index.html", form2=form2, form=form)
        
     def post(self, *args, **kwargs):
         context = {"success":False, "data":None}

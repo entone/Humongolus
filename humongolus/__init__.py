@@ -596,7 +596,10 @@ class Document(base):
     def __setitem__(self, key, val):
         #_id is a built-in field, it won't be in self.__keys__
         if key != '_id':
-            self.__hargs__[key] = val
+            try:
+                self.__hargs__[key] = val.__hargs__
+            except:
+                self.__hargs__[key] = val
             self.__hargskeys__.add(key)
             #an incomplete document from mongo will never call _map
             if self.__keys__.issubset(self.__hargskeys__) and self._id:
