@@ -82,8 +82,13 @@ class StateValidator(orm.FieldValidator):
         if val and not self.obj._parent.country is "USA": raise field.FieldException("Country must be USA to have a state")
         return val
 
+class Address(orm.EmbeddedDocument):
+    street = field.Char(required=True)
+    zip = field.Char()
+
 class Loca(orm.EmbeddedDocument):
-    city = field.Char()
+    city = field.Char(required=True)
+    address = Address()
 
 class BadHuman(Human):
     unique = field.Integer()
@@ -91,8 +96,6 @@ class BadHuman(Human):
     email = field.Email(dbkey="em")
     car = field.ModelChoice(type=Car)
     active = field.Boolean()
-    state = field.Char(validate=StateValidator)
-    country = field.Char(validate=orm.FieldValidator)
     location = Loca()
     avatar = field.File(database=Connection().avatars)
 
@@ -100,25 +103,23 @@ Human.cars = orm.Lazy(type=Car, key='owner')
 
 
 class AddressForm(widget.FieldSet):
-    _fields = ["street", "street2", "zip"]
+    _fields = ["street", "zip"]
 
-    street = widget.Input()
-    street2 = widget.Input()
-    zip = widget.Input()
+    street = widget.Input(label="Street")
+    zip = widget.Input(label="Zip")
 
 class LocationForm(widget.FieldSet):
-    _fields = ["city"]
-    _cls = "location"
+    _fields = ["city", "address"]
 
-    city = widget.Input()
+    city = widget.Input(label="City")
+    address = AddressForm(label="Address")
 
-class PersonForm(widget.Form):
-    _action = '/save_person'
-    _id = "person_woot"
+class HumanForm(widget.Form):
     #if anyone knows a better way to maintain the order of the fields, please let me know!
-    _fields = ["human_id", "name", "age", "location"]
+    _fields = ["name", "age", "weight", "location"]
 
-    human_id = widget.Input(label="ID")
     name = widget.Input(label="Name")
     age = widget.Input(label="Age", description="This is today minus the date you were born in seconds.")
+    weight = widget.Input(label="Weight")
     location = LocationForm(label="Location")
+

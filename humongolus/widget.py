@@ -1,50 +1,52 @@
 import copy
-from humongolus import Widget, Field, Document, EmbeddedDocument, Lazy, List, DocumentException
+from humongolus import Widget, Field, Document, EmbeddedDocument, Lazy, List, DocumentException, EMPTY
+
+def escape(s):
+    orig = copy.copy(s)
+    try:
+        s = unicode(s)
+        return s.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;').replace("'", '&#39;')
+    except: return orig
 
 class HTMLElement(Widget):
-    _tag = "input"
     _type = "text"
+    _tag = "input"
     _fields = []
-    _label = None
-    _description = None
-    _value = None
-    _cls = ""
-    _extra = None
-    _id = ""
 
-    def get_name(self):
-        return "%s_%s" % (self._prepend, self._name) if self._prepend else self._name
-
-    def get_id(self):
-        return "%s_%s" % (self._prepend, self._id) if self._prepend else self._id
 
     def render_fields(self, namespace=None):
         parts = []
         for fi in self._fields:
             try:
                 i = self.__dict__[fi]
-                ns = "-".join([namespace, i._name]) if namespace else i._name
-                label = "%s_%s" % (self._prepend, ns) if self._prepend else ns 
-                if i._label: parts.append(self.render_label(label, i._label))
+                ns = "-".join([namespace, i.attributes._name]) if namespace else i.attributes._name
+                label = "%s_%s" % (self.attributes.prepend, ns) if self.attributes.prepend else ns 
+                if i.attributes.label: parts.append(self.render_label(label, i.attributes.label))
                 a = i.render(namespace=ns)
                 if isinstance(a, list): parts.extend(a)
                 else: parts.append(a)
             except Exception as e:
+                print e
                 pass
         
         return parts
 
     def render_label(self, name, label):
         return "<label for='%s'>%s</label>" % (name, label)
-    
-    def label(self):
-        return self.render_label(self._name, self._label)
-    
-    def __getattr__(self, key):
-        try:
-            return self.__dict__["_%s" % key]
-        except:
-            raise AttributeError("%s" % key)
+
+    def label_tag(self):
+        return self.render_label(self.attributes.name, self.attributes.label)
+
+    def compile_tag(self, obj, close=True):
+        atts = ["<%s" % obj.pop("tag", "input")]
+        obj.update(obj.pop("extra", {}))
+        for k,v in obj.iteritems():
+            if v in EMPTY: continue
+            v = v if isinstance(v, list) else [v]
+            atts.append(u"%s='%s'" % (k, u" ".join([escape(val) for val in v])))
+        
+        atts.append("/>" if close else ">")
+        return u" ".join(atts)
 
     def __iter__(self):
         for fi in self._fields:
@@ -55,15 +57,23 @@ class Input(HTMLElement):
     
     def render(self, *args, **kwargs):
         self._type = kwargs.get("type", self._type)
-        self._name = kwargs.get("namespace", self._name)
-        self._value = kwargs.get("value", self._object.__repr__())
-        self._description = kwargs.get("description", self._description)
-        self._id = kwargs.get("id", "id_%s"%self._name)
-        self._cls = kwargs.get("cls", "")
-        self._label = kwargs.get("label", "")
-        self._extra = kwargs.get("extra", "")
-        val = self._value if self._value else ""
-        return "<%s type='%s' id='%s' name='%s' value='%s' class='%s' %s />" % (self._tag, self._type, self.get_id(), self.get_name(), val, self._cls, self._extra)
+        self.attributes._name = kwargs.get("namespace", self.attributes._name)
+        self.attributes._id = kwargs.get("id", "id_%s"%self.attributes._name)
+        self.attributes.value = kwargs.get("value", self.object.__repr__())
+        self.attributes.description = kwargs.get("description", self.attributes.description)
+        self.attributes.cls = kwargs.get("cls", self.attributes.cls)
+        self.attributes.label = kwargs.get("label", self.attributes.label)
+        self.attributes.extra = kwargs.get("extra", self.attributes.extra)
+        obj = {
+            "tag":self._tag,
+            "type":self._type,
+            "id":self.attributes.id,
+            "name":self.attributes.name,
+            "value":self.attributes.value,
+            "class":self.attributes.cls,
+            "extra":self.attributes.extra
+        }
+        return self.compile_tag(obj)
 
 class Password(Input):
     _type = "password"
@@ -72,22 +82,28 @@ class CheckBox(Input):
     _type = "checkbox"
 
     def render(self, *args, **kwargs):
-        extra = "checked='CHECKED'" if self._object._value else ""
+        extra = {"checked":'CHECKED'} if self.object._value else {}
         kwargs["extra"] = extra
-        kwargs["value"] = self._name
+        kwargs["value"] = self.attributes._name
         return super(CheckBox, self).render(*args, **kwargs)
 
 class Select(Input):
-    _render = None
 
     def render(self, *args, **kwargs):
         val = super(Select, self).render(*args, **kwargs)
-        st = "<select id='%s' name='%s' class='%s'>" % (self.get_id(), self.get_name(), self._cls)
+        obj = {
+            "tag":"select",
+            "id":self.attributes.id,
+            "name":self.attributes.name,
+            "class":self.attributes.cls,
+            "extra":self.attributes.extra
+        }
+        st = self.compile_tag(obj, close=False)
         ch = []
-        for i in self._object.get_choices(render=self._render):
+        for i in self.object.get_choices(render=self.attributes.item_render):
             val = i['value'] if isinstance(i, dict) else i
             display = i['display'] if isinstance(i, dict) else i
-            sel = "selected='SELECTED'" if val == self._object._value else ""
+            sel = "selected='SELECTED'" if val == self.object._value else ""
             ch.append("<option value='%s' %s>%s</option>" % (val, sel, display))
         
         return "%s%s</select>" % (st, "".join(ch))
@@ -96,12 +112,19 @@ class MultipleSelect(Input):
 
     def render(self, *args, **kwargs):
         val = super(MultipleSelect, self).render(*args, **kwargs)
-        st = "<select id='%s' name='%s' class='%s' multiple='multiple'>" % (self.get_id(), self.get_name(), self._cls)
+        obj = {
+            "tag":"select",
+            "id":self.attributes.id,
+            "name":self.attributes.name,
+            "class":self.attributes.cls,
+            "extra":self.attributes.extra
+        }
+        st = self.compile_tag(obj, close=False)
         ch = []
-        for i in self._object.get_choices(render=self._render):
+        for i in self.object.get_choices(render=self.attributes.item_render):
             val = i['value'] if isinstance(i, dict) else i
             display = i['display'] if isinstance(i, dict) else i
-            sel = "selected='SELECTED'" if val in self._object else ""
+            sel = "selected='SELECTED'" if val in self.object else ""
             ch.append("<option value='%s' %s>%s</option>" % (val, sel, display))
         
         return "%s%s</select>" % (st, "".join(ch))
@@ -112,39 +135,39 @@ class FieldSet(HTMLElement):
     def render(self, *args, **kwargs):
         val = super(FieldSet, self).render(*args, **kwargs)
         parts = []
-        st = "<fieldset id='%(id)s' name='%(name)s' class='%(cls)s'>"
-        vals ={
-            "id":self.get_id(),
-            "name": self.get_name(),
-            "cls":self._cls
+        obj = {
+            "tag":"fieldset",
+            "id":self.attributes.id,
+            "name":self.attributes.name,
+            "cls":self.attributes.cls,
+            "extra":self.attributes.extra
         }
+        st = self.compile_tag(obj, close=False)
         ns = kwargs.get('namespace')
-        parts.append(st % vals)
+        parts.append(st)
         parts.extend(self.render_fields(namespace=ns))
         parts.append("</fieldset>")
         return parts
 
 class Form(HTMLElement):
     #Attributes
-    _action = ""
-    _method = "POST"
-    _type = "multipart/form"
-    _data = None
     errors = {}
         
     def render(self, *args, **kwargs):
         val = super(Form, self).render(*args, **kwargs)
         parts = []
-        st = "<form id='%(id)s' class='%(cls)s' name='%(name)s' action='%(action)s' method='%(method)s' type='%(type)s'>"
-        vals = {
-            "id":self.get_id(),
-            "cls": self._cls,
-            "name":self.get_name(),
-            "action":self._action,
-            "method":self._method,
-            "type":self._type
+        obj = {
+            "tag":"form",
+            "id":self.attributes.id,
+            "name":self.attributes.name,
+            "class":self.attributes.cls,
+            "action":self.attributes.action,
+            "method":self.attributes.method,
+            "type":self.attributes.type,
+            "extra":self.attributes.extra
         }
-        parts.append(st % vals)
+        st = self.compile_tag(obj, close=False)
+        parts.append(st)
         parts.extend(self.render_fields())
         parts.append(self.submit())
         parts.append("</form>")
@@ -166,11 +189,14 @@ class Form(HTMLElement):
     def validate(self):
         if self._data: 
             obj = self.parse_data(self._data)
-            self._object._map(obj)
-            errors = self._object._errors()
+            print obj
+            self.object._map(obj)
+            errors = self.object._errors()
             if len(errors.keys()):
                 for k,v in errors.iteritems():
-                    self.__dict__[k].errors.append(v)
+                    try:
+                        self.__dict__[k].errors.append(v)
+                    except: pass
                 self.errors = errors
                 raise DocumentException(errors=errors)
 

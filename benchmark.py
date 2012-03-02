@@ -1,3 +1,18 @@
+"""
+python insert 0.205296039581
+bare 0.101219892502
+
+python read 0.10541009903
+bare 0.0112569332123
+
+pypy insert 0.626013040543
+bare 0.136276006699
+
+pypy read 0.326532125473
+bare 0.0427839756012
+"""
+
+
 from pymongo.connection import Connection
 import logging
 import humongolus as orm

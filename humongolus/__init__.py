@@ -86,43 +86,72 @@ class DocumentException(Exception):
         Exception.__init__(self, "")
         self.errors = errors
 
+class Attributes(object):
+    _id = None
+    _name = None
+    label = None
+    description = None
+    value = None
+    cls = None
+    prepend = None
+    action = ""
+    method = "POST"
+    type = "multipart/form"
+    action = None
+    item_render = None
+    extra = {}
+
+    def __init__(self, **kwargs):
+        self._name = kwargs.pop("name", None)
+        self._id = kwargs.pop("id", None)
+        for k,v in kwargs.iteritems():
+            try:
+                setattr(self, k, v)
+            except Exception as e: 
+                print e
+    
+    @property
+    def name(self):
+        return "%s_%s" % (self.prepend, self._name) if self.prepend else self._name
+
+    @property
+    def id(self):
+        return "%s_%s" % (self.prepend, self._id) if self.prepend else self._id
+
 class Widget(object):
     """Base class for all widgets
-
-    When extending this class any variables beginning with _ are able to be set with kwargs when instanting
     """
-    _object = None
-    _prepend = None
-    _name = None
-    errors = []
     __args__ = []
     __kwargs__ = {}
+    _prepend = None
+    _data = None
+    errors = []
+    attributes = Attributes()
+    object = None
 
     def __init__(self, *args, **kwargs):
         """Create a new instance of a widget
         This is generally handled automatically when using the Form system
 
         :Parameters:
-            - `obj`: the object to render the widget with
-            - `**kwargs`: will attempt to match and set  private(_) class attributes
+            - `object`: the object to render the widget with
+            - `**kwargs`: attributes to be applied to the widget
         """
         self.__args__ = args
         self.__kwargs__ = kwargs
+        self.object = kwargs.pop('object', None)
+        self._data = kwargs.pop('data', None)
         self.errors = []
-        for k,v in kwargs.iteritems():
-            try:
-                setattr(self, "_%s" % k, v)
-            except: pass
+        kwargs['prepend'] = self._prepend if self._prepend and not 'prepend' in kwargs else kwargs.pop('prepend', None)
+        self.attributes = Attributes(**kwargs)
 
         for k,v in self.__class__._getfields().iteritems():
-            v.__kwargs__['prepend'] = self._prepend
+            v.__kwargs__['prepend'] = self.attributes.prepend
             v.__kwargs__['name'] = k
-            n_obj = v.__class__(*v.__args__, **v.__kwargs__)
             try:
-                n_obj._object = self._object._get(k)
-            except:
-                pass
-                
+                v.__kwargs__['object'] = self.object._get(k)
+            except Exception as e: pass
+            n_obj = v.__class__(*v.__args__, **v.__kwargs__)
             self.__dict__[k] = n_obj
 
     @classmethod
@@ -136,7 +165,6 @@ class Widget(object):
                 fields.update(i._getfields())
             except:pass
         return fields
-        if self._object: self._object.render()
 
     def clean(self, val, doc=None):
         """Override to apply custom parsing of form data. 
@@ -155,7 +183,7 @@ class Widget(object):
         Default returns self._object.__repr__()
 
         """
-        return self._object.__repr__()
+        return self.object.__repr__()
 
 class Field(object):
     """Base class for all Field types
@@ -251,8 +279,8 @@ class Field(object):
     def __repr__(self):
         try:
             return self._value
-        except:
-            return self.__str__()
+        except Exception as e:
+            return None
 
     def __str__(self):
         return str(self._value)
@@ -418,6 +446,7 @@ class base(dict):
     __kwargs__ = {}
     __args__ = ()
     __keys__ = []
+    __doc__ = {}
 
 
     def __init__(self, *args, **kwargs):
@@ -431,7 +460,8 @@ class base(dict):
         for cls in reversed(self.__class__._getbases()):
             for k,v in cls.__dict__.iteritems():
                 if isinstance(v, (base, Field, List, Lazy)):
-                    if not isinstance(v, Lazy): self.__keys__.add(unicode(k))
+                    key = v._dbkey if v._dbkey else k
+                    if not isinstance(v, Lazy): self.__keys__.add(unicode(key))
                     v.__kwargs__["base"] = b
                     v.__kwargs__['name'] = k
                     v.__kwargs__['parent'] = self
@@ -560,7 +590,7 @@ class Document(base):
             self._id = ObjectId(kwargs['id'])
             self._doc()
     """
-    this is called by pymongo for each key:val pair for each document 
+    this is called by pymongo for each key:val pair for each document
     returned by find and find_one
     """
     def __setitem__(self, key, val):
@@ -571,7 +601,7 @@ class Document(base):
             #an incomplete document from mongo will never call _map
             if self.__keys__.issubset(self.__hargskeys__) and self._id:
                 self._map(self.__hargs__, init=True)
-        else: self._id = val 
+        elif key == '_id': self._id = val
 
     def _doc(self):
         doc = self._coll.find_one({'_id':self._id})
