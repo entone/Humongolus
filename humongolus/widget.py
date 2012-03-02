@@ -1,5 +1,5 @@
 import copy
-from humongolus import Widget, Field, Document, EmbeddedDocument, Lazy, List, DocumentException
+from humongolus import Widget, Field, Document, EmbeddedDocument, Lazy, List, DocumentException, EMPTY
 
 def escape(s):
     orig = copy.copy(s)
@@ -41,7 +41,7 @@ class HTMLElement(Widget):
         atts = ["<%s" % obj.pop("tag", "input")]
         obj.update(obj.pop("extra", {}))
         for k,v in obj.iteritems():
-            if not v: continue
+            if v in EMPTY: continue
             v = v if isinstance(v, list) else [v]
             atts.append(u"%s='%s'" % (k, u" ".join([escape(val) for val in v])))
         
@@ -189,11 +189,14 @@ class Form(HTMLElement):
     def validate(self):
         if self._data: 
             obj = self.parse_data(self._data)
+            print obj
             self.object._map(obj)
             errors = self.object._errors()
             if len(errors.keys()):
                 for k,v in errors.iteritems():
-                    self.__dict__[k].errors.append(v)
+                    try:
+                        self.__dict__[k].errors.append(v)
+                    except: pass
                 self.errors = errors
                 raise DocumentException(errors=errors)
 

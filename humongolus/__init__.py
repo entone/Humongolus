@@ -97,6 +97,7 @@ class Attributes(object):
     action = ""
     method = "POST"
     type = "multipart/form"
+    action = None
     item_render = None
     extra = {}
 
@@ -106,7 +107,8 @@ class Attributes(object):
         for k,v in kwargs.iteritems():
             try:
                 setattr(self, k, v)
-            except: pass
+            except Exception as e: 
+                print e
     
     @property
     def name(self):
@@ -124,7 +126,7 @@ class Widget(object):
     _prepend = None
     _data = None
     errors = []
-    attributes = None
+    attributes = Attributes()
     object = None
 
     def __init__(self, *args, **kwargs):
@@ -146,12 +148,10 @@ class Widget(object):
         for k,v in self.__class__._getfields().iteritems():
             v.__kwargs__['prepend'] = self.attributes.prepend
             v.__kwargs__['name'] = k
-            n_obj = v.__class__(*v.__args__, **v.__kwargs__)
             try:
-                n_obj.object = self.object._get(k)
-            except:
-                pass
-                
+                v.__kwargs__['object'] = self.object._get(k)
+            except Exception as e: pass
+            n_obj = v.__class__(*v.__args__, **v.__kwargs__)
             self.__dict__[k] = n_obj
 
     @classmethod
@@ -279,8 +279,8 @@ class Field(object):
     def __repr__(self):
         try:
             return self._value
-        except:
-            return self.__str__()
+        except Exception as e:
+            return None
 
     def __str__(self):
         return str(self._value)
@@ -446,6 +446,7 @@ class base(dict):
     __kwargs__ = {}
     __args__ = ()
     __keys__ = []
+    __doc__ = {}
 
 
     def __init__(self, *args, **kwargs):
@@ -459,7 +460,8 @@ class base(dict):
         for cls in reversed(self.__class__._getbases()):
             for k,v in cls.__dict__.iteritems():
                 if isinstance(v, (base, Field, List, Lazy)):
-                    if not isinstance(v, Lazy): self.__keys__.add(unicode(k))
+                    key = v._dbkey if v._dbkey else k
+                    if not isinstance(v, Lazy): self.__keys__.add(unicode(key))
                     v.__kwargs__["base"] = b
                     v.__kwargs__['name'] = k
                     v.__kwargs__['parent'] = self
@@ -588,7 +590,7 @@ class Document(base):
             self._id = ObjectId(kwargs['id'])
             self._doc()
     """
-    this is called by pymongo for each key:val pair for each document 
+    this is called by pymongo for each key:val pair for each document
     returned by find and find_one
     """
     def __setitem__(self, key, val):
@@ -599,7 +601,7 @@ class Document(base):
             #an incomplete document from mongo will never call _map
             if self.__keys__.issubset(self.__hargskeys__) and self._id:
                 self._map(self.__hargs__, init=True)
-        else: self._id = val 
+        elif key == '_id': self._id = val
 
     def _doc(self):
         doc = self._coll.find_one({'_id':self._id})
