@@ -93,6 +93,8 @@ class Attributes(object):
     description = None
     value = None
     cls = None
+    cols = None
+    rows = None
     prepend = None
     action = ""
     method = "POST"

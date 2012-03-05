@@ -10,8 +10,16 @@ Google Group: http://groups.google.com/group/humongolus
 * Full Test Suite (97% code coverage)
 * Documentation
 * Exposes default MongoDB cursors 
-* HTML Widget System
-* Robust HTML Form Handling (rendering and validation)
+* Robust Widget System
+* Default HTML Widgets
+    * Text
+    * Password
+    * Checkbox
+    * Select
+    * MultiSelect
+    * TextArea
+    * FieldSet
+    * Form
 * List validation (len and multiple types)
 * Attribute aliases
 * Dynamic Field Validation

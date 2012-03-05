@@ -103,7 +103,7 @@ class AddressForm(widget.FieldSet):
     _fields = ["street", "street2", "zip"]
 
     street = widget.Input()
-    street2 = widget.Input()
+    street2 = widget.TextArea(cls="Woot", rows=10, cols=30)
     zip = widget.Input()
 
 class LocationForm(widget.FieldSet):

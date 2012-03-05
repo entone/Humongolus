@@ -129,6 +129,23 @@ class MultipleSelect(Input):
         
         return "%s%s</select>" % (st, "".join(ch))
 
+
+class TextArea(Input):
+
+    def render(self, *args, **kwargs):
+        val = super(TextArea, self).render(*args, **kwargs)
+        obj = {
+            "tag":"textarea",
+            "id":self.attributes.id,
+            "name":self.attributes.name,
+            "class":self.attributes.cls,
+            "cols":self.attributes.cols,
+            "rows":self.attributes.rows,
+            "extra":self.attributes.extra
+        }
+        st = self.compile_tag(obj, close=False)
+        return "%s%s</textarea>" % (st, self.attributes.value if self.attributes.value else "")
+
     
 class FieldSet(HTMLElement):
 
