@@ -1,6 +1,7 @@
 import sys
 sys.path.insert(0, "../")
 
+import os
 import humongolus as orm
 import tornado.web
 import tornado.template
@@ -50,8 +51,10 @@ class AppHandler(tornado.web.RequestHandler):
                 print context
                 self.finish(json.dumps(context))
 
+ROOT = os.path.abspath(os.path.dirname(__file__))+"/"
+
 SERVER_SETTINGS = {
-    "static_path": "/home/entone/Humongolus/example",
+    "static_path": ROOT,
 }
 
 ROUTES = [
