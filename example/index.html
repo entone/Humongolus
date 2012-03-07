@@ -19,6 +19,9 @@
             border: 3px solid #dddddd;
         }
 
+        label{
+            display: block;
+        }
         input{
             display:block;
         }
@@ -41,14 +44,24 @@
             color: #666666;
             padding: 2px;
         }
+        
+        span.error{
+            background-color: #ff0000;
+            padding: 2px;
+            color: #FFFFFF;
+        }
 
     </style>
 
 </head>
 <body>
-<p>The bottom form will be populated once you save a Form and reload. Only the first Form will save correctly.</p>
+<p>The top form shows a simple template, the bottom form is a rendering of complex, embedded structures.</p>
 <div id='error' style='display:none;'></div>
-{% raw form.render() %}
-{% raw form2.render() %}
+<div id="form1">
+    {% include "form.html" %}
+</div>
+<div id="form2">
+    {% raw form2.render(render_labels=True) %}
+</div>
 </body>
 </html>

@@ -1,0 +1,16 @@
+{% import humongolus.field as o_field %}
+{% import humongolus.widget as widget %}
+<form action="{{ form.attributes.action }}" method="{{ form.attributes.method }}">
+	{% for field in form %}
+		{% if isinstance(field.object, o_field.Boolean) %}
+			<label class='woot'>{{ field.attributes.label }}</label>
+		{% else %}
+			<label>{{ field.attributes.label }}</label>
+		{% end %}
+		{% if field.attributes.name in form.errors %}
+			<span class='error'>{{ form.errors[field.attributes.name] }}</span>
+		{% end %}
+		{% raw field() %}
+	{% end %}
+	<input type='submit' value='save me!'/>
+</form>

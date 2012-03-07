@@ -14,15 +14,16 @@ class HTMLElement(Widget):
     _fields = []
 
 
-    def render_fields(self, namespace=None):
+    def render_fields(self, namespace=None, **kwargs):
         parts = []
         for fi in self._fields:
             try:
                 i = self.__dict__[fi]
                 ns = "-".join([namespace, i.attributes._name]) if namespace else i.attributes._name
-                label = "%s_%s" % (self.attributes.prepend, ns) if self.attributes.prepend else ns 
-                if i.attributes.label: parts.append(self.render_label(label, i.attributes.label))
-                a = i.render(namespace=ns)
+                if kwargs.get("render_labels", None):
+                    label = "%s_%s" % (self.attributes.prepend, ns) if self.attributes.prepend else ns 
+                    if i.attributes.label: parts.append(self.render_label(label, i.attributes.label))
+                a = i.render(namespace=ns, **kwargs)
                 if isinstance(a, list): parts.extend(a)
                 else: parts.append(a)
             except Exception as e:
@@ -160,9 +161,9 @@ class FieldSet(HTMLElement):
             "extra":self.attributes.extra
         }
         st = self.compile_tag(obj, close=False)
-        ns = kwargs.get('namespace')
+        ns = kwargs.pop('namespace', None)
         parts.append(st)
-        parts.extend(self.render_fields(namespace=ns))
+        parts.extend(self.render_fields(namespace=ns, **kwargs))
         parts.append("</fieldset>")
         return parts
 
@@ -185,7 +186,7 @@ class Form(HTMLElement):
         }
         st = self.compile_tag(obj, close=False)
         parts.append(st)
-        parts.extend(self.render_fields())
+        parts.extend(self.render_fields(**kwargs))
         parts.append(self.submit())
         parts.append("</form>")
         return "".join(parts)

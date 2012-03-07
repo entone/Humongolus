@@ -35,54 +35,57 @@ function parse_fieldsets(element){
 function forms(){
     $("form").each(function(){
         console.log(this);
-        $(this).submit(function(){
-            console.log(this);
-            try{
-                var data = {};
-                $("#error").html("creating account");
-                $("#error").show("blind");
+        if(!this.set_submit){
+            this.set_submit = true;
+            $(this).submit(function(){
+                console.log(this);
                 try{
-                    data.form = JSON.stringify(parse_fieldsets(this));
-                    console.log(data.form)
+                    var data = {};
+                    $("#error").html("creating account");
+                    $("#error").show("blind");
+                    try{
+                        data.form = JSON.stringify(parse_fieldsets(this));
+                        console.log(data.form)
+                    }catch(e){
+                        console.log(e);
+                    }
+                    var self = this;
+                    var action = $(this).attr("action") ? $(this).attr("action") : '/';
+                    $.ajax({
+                        url: action,
+                        data:data, 
+                        success:function(res){
+                            if(res.success){
+                                $("#error").html("SUCCESS: " + res.data);
+                                $("#error").show("blind");
+                            }else{
+                                st = "<ul>";
+                                for(i in res.data){
+                                    st+= "<li>"+i+": "+res.data[i]+"</li>";
+                                }
+                                st+="</ul>";
+                                $("#error").html("Error: " + st);
+                                $("#error").show("blind");
+                            }
+                            $("#form1").html(res.html);
+                            $("input[type=submit]").removeAttr("disabled");
+                            forms();
+                        },
+                        error:function(a,b,c){
+                            self.submitting = false;
+                            console.log(a);
+                            console.log(b);
+                            console.log(c);
+                        },
+                        timeout: 100000,
+                        dataType:'json',
+                        type: "POST"
+                    });
+                    return false;
                 }catch(e){
                     console.log(e);
                 }
-                var self = this;
-                var action = $(this).attr("action") ? $(this).attr("action") : '/';
-                $.ajax({
-                    url: action,
-                    data:data, 
-                    success:function(res){
-                        if(res.success){
-                            $("#error").html("SUCCESS: " + res.data);
-                            $("#error").show("blind");
-                        }else{
-                            st = "<ul>";
-                            for(i in res.data){
-                                st+= "<li>"+i+": "+res.data[i]+"</li>";
-                            }
-                            st+="</ul>";
-                            $("#error").html("Error: " + st);
-                            $("#error").show("blind");
-                        }
-                        console.log(res);
-                        $("input[type=submit]").removeAttr("disabled");
-                    },
-                    error:function(a,b,c){
-                        self.submitting = false;
-                        console.log(a);
-                        console.log(b);
-                        console.log(c);
-                    },
-                    timeout: 100000,
-                    dataType:'json',
-                    type: "POST"
-                });
-                return false;
-            }catch(e){
-                console.log(e);
-            }
-        });
-        
+            });
+        }
     })
 }

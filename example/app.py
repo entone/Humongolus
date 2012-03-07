@@ -17,26 +17,15 @@ class AppHandler(tornado.web.RequestHandler):
         super(AppHandler, self).__init__(*args, **kwargs)
 
     def get(self, *args, **kwargs):
-        obj = objects.BadHuman()
-        form = objects.HumanForm(object=obj, action="/", id="test")
         
+        form = objects.SimpleForm(action="/", id="test")
 
-        for i in objects.BadHuman.find():
-            obj2 = i
-            break
+        form2 = objects.HumanForm(action="/")
         
-
-        print obj2.location.address.street
-        if obj2 is None: 
-            print "empty"
-            obj2  = objects.BadHuman()
-
-        form2 = objects.HumanForm(object=obj2, prepend='initial', action="/", id="woot")
-
-        return self.render("index.html", form2=form2, form=form)
+        return self.render("index.html", form=form, form2=form2)
        
     def post(self, *args, **kwargs):
-        context = {"success":False, "data":None}
+        context = {"success":False, "data":None, "html":None}
         try:
             submit = json.loads(self.get_argument("form", "{}"))
             print submit
@@ -44,24 +33,25 @@ class AppHandler(tornado.web.RequestHandler):
             print e
         else:
             obj = objects.BadHuman()
-            form = objects.HumanForm(object=obj, action="/", id="test", data=submit)
+            form = objects.SimpleForm(object=obj, action="/", id="test", data=submit)
             try:
                 form.validate()
                 id = obj.save()
-                print id
+                context['data'] = str(id)
+                context['success'] = True
             except orm.DocumentException as e:
+                context['success'] = False
                 obj = {}
                 for k,v in e.errors.iteritems():
                     obj[k] = v.message
                 context['data'] = obj
-                self.finish(json.dumps(context))
-            else:
-                context['success'] = True
-                context['data'] = str(id)
+            finally:
+                context['html'] = self.render_string("form.html", form=form)
+                print context
                 self.finish(json.dumps(context))
 
 SERVER_SETTINGS = {
-    "static_path": "/home/entone/dev/Humongolus/example",
+    "static_path": "/home/entone/Humongolus/example",
 }
 
 ROUTES = [

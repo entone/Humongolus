@@ -123,3 +123,10 @@ class HumanForm(widget.Form):
     weight = widget.Input(label="Weight")
     location = LocationForm(label="Location")
 
+class SimpleForm(widget.Form):
+    _fields = ["name", "age", "phone"]
+    name = widget.Input(label="Name")
+    age = widget.Input(label="Age", description="This is today minus the date you were born in seconds.")
+    phone = widget.Input(label="Phone")
+
+

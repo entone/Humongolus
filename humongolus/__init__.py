@@ -187,6 +187,13 @@ class Widget(object):
         """
         return self.object.__repr__()
 
+    def __call__(self, *args, **kwargs):
+        parts = self.render(*args, **kwargs)
+        if isinstance(parts, list):
+            return "".join(parts)
+        
+        return parts
+
 class Field(object):
     """Base class for all Field types
 
