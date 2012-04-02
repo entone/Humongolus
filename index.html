@@ -1,0 +1,223 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Humongolus by entone</title>
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js"></script>
+    <script src="javascripts/respond.js"></script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <!--[if lt IE 8]>
+    <link rel="stylesheet" href="stylesheets/ie.css">
+    <![endif]-->
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+  </head>
+  <body>
+
+      <div id="header">
+        <nav>
+          <li class="fork"><a href="https://github.com/entone/Humongolus">Fork On GitHub</a></li>
+          <li class="downloads"><a href="https://github.com/entone/Humongolus/zipball/master">ZIP</a></li>
+          <li class="downloads"><a href="https://github.com/entone/Humongolus/tarball/master">TAR</a></li>
+          <li class="title">DOWNLOADS</li>
+        </nav>
+      </div><!-- end header -->
+
+    <div class="wrapper">
+
+      <section>
+        <div id="title">
+          <h1>Humongolus</h1>
+          <p>Persistence and Widget Framework for Python and MongoDB</p>
+          <hr>
+          <span class="credits left">Project maintained by <a href="https://github.com/entone">entone</a></span>
+          <span class="credits right">Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/mattgraham">mattgraham</a></span>
+        </div>
+
+        <h3>Persistence and Widget Framework for Python and MongoDB</h3>
+
+<p>Google Group: <a href="http://groups.google.com/group/humongolus">http://groups.google.com/group/humongolus</a></p>
+
+<h4>Features</h4>
+
+<ul>
+<li>Type Validation</li>
+<li>Lazy Relationships</li>
+<li>Full MongoDB Index Support</li>
+<li>Dirty Updating (only send changes to db)</li>
+<li>Full Test Suite (97% code coverage)</li>
+<li>Documentation</li>
+<li>Exposes default MongoDB cursors </li>
+<li>Robust Widget System</li>
+<li>Default HTML Widgets
+
+<ul>
+<li>Text</li>
+<li>Password</li>
+<li>Checkbox</li>
+<li>Select</li>
+<li>MultiSelect</li>
+<li>TextArea</li>
+<li>FieldSet</li>
+<li>Form</li>
+</ul>
+</li>
+<li>List validation (len and multiple types)</li>
+<li>Attribute aliases</li>
+<li>Dynamic Field Validation</li>
+<li>Large Collection of Default Field Types
+
+<ul>
+<li>Char</li>
+<li>Integer</li>
+<li>Float</li>
+<li>Date</li>
+<li>TimeStamp</li>
+<li>DocumentID (pseudo DBRef)</li>
+<li>AutoIncrement</li>
+<li>DynamicDocument (pseudo DBRef)</li>
+<li>Boolean</li>
+<li>Regex</li>
+<li>Geo</li>
+<li>Email</li>
+<li>Phone</li>
+<li>Choice Fields (Model, Collection and List)</li>
+<li>File</li>
+</ul>
+</li>
+<li>Endless EmbeddedDocuments</li>
+<li>Default Created/Modified attributes</li>
+<li>Easily integrates with Backbone.js or other client side frameworks</li>
+<li>TODO
+
+<ul>
+<li>Tutorials</li>
+<li>Plugins</li>
+</ul>
+</li>
+</ul><h4>Usage also see test.py and tests/test_field.py for more usage examples.</h4>
+
+<pre><code>from pymongo.connection import Connection
+import logging
+import humongolus as orm
+import datetime
+import humongolus.field as field
+
+conn = Connection()
+FORMAT = '%(asctime)-15s %(message)s'
+logging.basicConfig(format=FORMAT)
+logger = logging.getLogger("humongolus")
+
+orm.settings(logger=logger, db_connection=conn)
+
+class Location(orm.EmbeddedDocument):
+    city = field.Char(required=True)
+    state = field.Char()
+
+class Job(orm.EmbeddedDocument):
+    employer = field.Char()
+    title = field.Char(required=True)
+    locations = orm.List(type=Location)
+
+class Human(orm.Document):
+    _db = "test"
+    _collection = "humans"
+    human_id = field.AutoIncrement(collection="human")
+    name = field.Char(required=True, min=2, max=25)
+    age = field.Integer(min=0, max=3000)
+    height = field.Float(min=1, max=100000)
+    weight = field.Float(min=1, max=30000)
+    jobs = orm.List(type=Job)
+    genitalia = field.Char()
+
+class Female(Human):
+    genitalia = field.Char(default='inny')
+
+class Male(Human):
+    genitalia = field.Char(default='outy')
+
+class Car(orm.Document):
+    _db = "test"
+    _collection = "cars"
+    owner = field.DynamicDocument()
+    make = field.Char()
+    model = field.Char()
+    year = field.Date()
+    silly_date = field.TimeStamp()    
+
+Human.cars = orm.Lazy(type=Car, key='owner._id')
+
+chris = Male()
+chris.name = "Chris"
+chris.age = 31
+chris.height = 100
+chris.weight = 180
+
+job = Job()
+job.employer = "Entropealabs"
+job.title = "President"
+
+loc = Location()
+loc.city = "Chicago"
+loc.state = "IL"
+
+job.locations.append(loc)
+chris.jobs.append(job)
+
+print chris._json()
+    {'jobs': [
+        {
+            'employer': u'Entropealabs', 
+            'locations': [
+                {'city': u'Chicago', 'state': u'IL'}
+            ], 
+            'title': u'President'}
+        ], 
+        'name': u'Chris', 
+        'weight': 180.0, 
+        'age': 31, 
+        'height': 100.0, 
+        'genitalia': u'outy', 
+        'human_id': 1328
+    }
+
+_id = chris.save()
+
+print _id
+
+    4f36dd48eac0742b92000000
+
+for person in Human.find().sort({"name":-1}):
+    print person.name
+    print person.created
+    print person.modifed
+    for job in person.jobs:
+        print job.title
+        for loc in job.locations:
+            print loc.city
+
+car = Car()
+car.owner = chris
+car.make = "Isuzu"
+car.model = "Rodeo"
+car.year = datetime.datetime(1998, 1, 1)
+
+print car
+    &lt;__main__.Car object at 0x7fe3c9375650&gt;
+
+c_id = car.save()
+
+print car._get("owner")().name
+    Chris
+</code></pre>
+      </section>
+
+    </div>
+    <!--[if !IE]><script>fixScale(document);</script><!--<![endif]-->
+  </body>
+</html>
