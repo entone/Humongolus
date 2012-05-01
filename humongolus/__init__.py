@@ -19,7 +19,7 @@ Humongolus is a Persistence and Widget Framework for MongoDB written in Python
 import settings as _settings
 import datetime
 import pymongo
-from pymongo.objectid import ObjectId
+from bson.objectid import ObjectId
 
 EMPTY = ("", " ", None, "None")
 

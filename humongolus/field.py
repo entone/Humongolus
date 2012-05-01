@@ -1,7 +1,7 @@
 import datetime
 import re
 from humongolus import Field, FieldException, Document, import_class
-from pymongo.objectid import ObjectId
+from bson.objectid import ObjectId
 from gridfs import GridFS
 
 class MinException(FieldException): pass
