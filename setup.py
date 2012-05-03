@@ -9,7 +9,7 @@ setup(name='Humongolus',
       author='entone',
       packages=find_packages(),
       zip_safe=False,
-      requires=['pymongo'],
+      install_requires=['pymongo'],
       include_package_data=True,
       )
 
