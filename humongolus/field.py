@@ -147,7 +147,7 @@ class Choice(Char):
     def clean(self, val, doc=None):
         val = super(Choice, self).clean(val, doc=doc)
         vals = [opt['value'] if isinstance(opt, dict) else opt for opt in self._choices]
-        if not v in vals: raise FieldException("%s is not a valid option")
+        if not val in vals: raise FieldException("%s is not a valid option")
         return val
 
     def get_choices(self, render=None):

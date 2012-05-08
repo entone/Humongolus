@@ -1,4 +1,8 @@
-import unittest
+import sys
+if sys.version < (2,7):
+    import unittest2 as unittest
+else:
+    import unittest
 import datetime
 import objects
 import os
@@ -149,6 +153,12 @@ class Field(unittest.TestCase):
     def test_choice(self):
         car = objects.Scion()
         car.color = "Red"
+
+    def test_bad_choice(self):
+        car = objects.Scion()
+        car.color = "Invalid"
+        with self.assertRaises(orm.DocumentException) as cm:
+            car.save()
 
     def test_document_id(self):
         self.obj.name = self.name
