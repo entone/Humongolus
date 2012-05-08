@@ -86,6 +86,9 @@ class DocumentException(Exception):
         Exception.__init__(self, "")
         self.errors = errors
 
+    def __str__(self):
+        return str(self.errors) 
+
 class Attributes(object):
     _id = None
     _name = None
