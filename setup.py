@@ -6,7 +6,7 @@ from setuptools import find_packages
 
 setup(name='Humongolus',
       version='1.0',
-      author='entone',
+      author='Christopher Coté',
       packages=find_packages(),
       zip_safe=False,
       install_requires=['pymongo'],
