@@ -99,10 +99,12 @@ class DocumentId(Field):
     _type = None
 
     def clean(self, val, doc=None):
-        val = val._id if hasattr(val, '_id') else val
-        if val:
-            try: 
-                v = ObjectId(val)
+        v = val._id if hasattr(val, '_id') else val
+        if hasattr(val, '_id') and not val._id:
+            raise FieldException("Object has not been saved yet")
+        if v:
+            try:
+                v = ObjectId(v)
             except Exception as e:
                 raise FieldException("Invalid ObjectId")
         return v
