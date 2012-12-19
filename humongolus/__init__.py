@@ -740,11 +740,11 @@ class Index(object):
     ASCENDING = pymongo.ASCENDING
     GEO2D = pymongo.GEO2D
     _name = None
-    _name = None
     _key = None
     _drop_dups = None
     _unique = None
     _background = None
+    _ttl = None
     _min = -180
     _max = 180
 
@@ -755,7 +755,7 @@ class Index(object):
     
     def create(self, conn):
         if not isinstance(self._key, list): self._key = [self._key]
-        conn.ensure_index(self._key, drop_dups=self._drop_dups, background=self._background, unique=self._unique, min=self._min, max=self._max, name=self._name)
+        conn.ensure_index(self._key, drop_dups=self._drop_dups, background=self._background, unique=self._unique, min=self._min, max=self._max, name=self._name, expireAfterSeconds=self._ttl)
 
 
 def ensure_indexes():

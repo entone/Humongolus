@@ -100,9 +100,11 @@ class DocumentId(Field):
 
     def clean(self, val, doc=None):
         val = val._id if hasattr(val, '_id') else val
-        if val: 
-            v = ObjectId(val)
-        else: raise FieldException("value cannot be None")
+        if val:
+            try: 
+                v = ObjectId(val)
+            except Exception as e:
+                raise FieldException("Invalid ObjectId")
         return v
     
     def __call__(self):
