@@ -620,6 +620,7 @@ class Document(base):
 
     def _doc(self):
         doc = self._coll.find_one({'_id':self._id})
+        if not doc: raise DocumentException("Invalid ObjectID")
         self._map(doc, init=True)
 
     @property
