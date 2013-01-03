@@ -756,8 +756,16 @@ class Index(object):
     
     def create(self, conn):
         if not isinstance(self._key, list): self._key = [self._key]
-        conn.ensure_index(self._key, drop_dups=self._drop_dups, background=self._background, unique=self._unique, min=self._min, max=self._max, name=self._name, expireAfterSeconds=self._ttl)
-
+        ob = dict(
+            drop_dups=self._drop_dups, 
+            background=self._background, 
+            unique=self._unique, 
+            min=self._min, 
+            max=self._max, 
+            name=self._name,             
+        )
+        if self._ttl: ob['expireAfterSeconds'] = self._ttl
+        conn.ensure_index(self._key, **ob)
 
 def ensure_indexes():
     for cls in Document.__subclasses__():
