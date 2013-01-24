@@ -279,6 +279,9 @@ class Find(unittest.TestCase):
         for i in xrange(5):
             obj = objects.Female()
             obj.name = "Anne%s" % i
+            j = objects.Job()
+            j.title = "President"
+            obj.jobs.append(j)
             obj.save()
             self.ids.append(obj._id)
     
@@ -286,8 +289,11 @@ class Find(unittest.TestCase):
         ids = []
         print self.ids
         for obj in objects.Female.find().sort('_id'):
+            print obj.jobs[0]
+            print obj.created
+            print obj.json()
             ids.append(obj._id)
-        
+                
         self.assertEqual(ids, self.ids)
     
     def test_fields(self):

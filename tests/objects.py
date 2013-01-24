@@ -85,6 +85,7 @@ class StateValidator(orm.FieldValidator):
 class Loca(orm.EmbeddedDocument):
     city = field.Char()
 
+
 class BadHuman(Human):
     unique = field.Integer()
     phone = field.Phone()

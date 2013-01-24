@@ -419,6 +419,9 @@ class List(list):
         for item in val:
             try:
                 obj = self._type()
+                try:
+                    item = item.__hargs__
+                except:pass
                 obj._map(item, init=init, doc=None)
                 self.append(obj)
             except:
@@ -472,7 +475,7 @@ class base(dict):
         for cls in reversed(self.__class__._getbases()):
             for k,v in cls.__dict__.iteritems():
                 if isinstance(v, (base, Field, List, Lazy)):
-                    key = v._dbkey if v._dbkey else k
+                    key = v._dbkey if hasattr(v, '_dbkey') and v._dbkey else k
                     if not isinstance(v, Lazy): self.__keys__.add(unicode(key))
                     v.__kwargs__["base"] = b
                     v.__kwargs__['name'] = k
@@ -534,12 +537,18 @@ class base(dict):
 
     def _map(self, vals, init=False, doc=None):
         self._inited = True
+        try:
+            self.__created__ = vals['__created__']
+            self.__modified__ = vals['__modified__']
+            self.__active__ = vals['__active__']
+        except: pass
         for k,v in self.__dict__.iteritems():
             try:
-                key = v._dbkey if v._dbkey else k
+                key = v._dbkey if hasattr(v,'_dbkey') and v._dbkey else k
                 val = vals[key]
                 v._map(val, init=init, doc=doc)
-            except: pass
+            except Exception as e: 
+                pass
 
     def _json(self):
         obj = {}
@@ -614,7 +623,7 @@ class Document(base):
                 self.__hargs__[key] = val
             self.__hargskeys__.add(key)
             #an incomplete document from mongo will never call _map
-            if self.__keys__.issubset(self.__hargskeys__) and self._id:
+            if self.__keys__.issubset(self.__hargskeys__) and self._id:                
                 self._map(self.__hargs__, init=True)
         elif key == '_id': self._id = val
 
