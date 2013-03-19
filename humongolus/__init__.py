@@ -498,6 +498,9 @@ class base(dict):
             else: return obj
         except Exception as e: raise e
 
+    def __nonzero__(self):
+        return True
+
     @classmethod
     def _getbases(cls):
         b = [cls]        
