@@ -781,9 +781,12 @@ class Index(object):
 
 def ensure_indexes():
     for cls in Document.__subclasses__():
-        _settings.LOGGER.debug("Starting Indexing: %s" % cls.__name__)
-        cls.__ensureindexes__()
-        _settings.LOGGER.debug("Done Indexing: %s" % cls.__name__)
+        try:
+            _settings.LOGGER.debug("Starting Indexing: %s" % cls.__name__)
+            cls.__ensureindexes__()
+            _settings.LOGGER.debug("Done Indexing: %s" % cls.__name__)
+        except Exception as e:
+            _settings.LOGGER.warning(e)
 
 
 
