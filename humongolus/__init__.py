@@ -243,7 +243,8 @@ class Field(object):
     def _clean(self, val, dirty=None, doc=None):
         self._error = None
         self._isrequired(val)
-        val = self.clean(val, doc=doc)
+        if not val in EMPTY:
+            val = self.clean(val, doc=doc)
         val = self._validate(self).validate(val, doc=doc) if self._validate else val 
         self._dirty = self._value if not dirty else dirty
         self._value = val
