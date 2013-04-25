@@ -403,7 +403,6 @@ class List(list):
                 else: ret.update({ns:obj._json()})
             except Exception as e:
                 ret[ns] = obj
-                print ret
         return ret
     
     def _errors(self, namespace):
