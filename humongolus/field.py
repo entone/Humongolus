@@ -132,7 +132,7 @@ class DynamicDocument(Field):
         if isinstance(val, Document):
             if val._id != None:
                 cls = "%s.%s" % (val.__module__, val.__class__.__name__)
-                return {"cls":cls, "_id":val._id}
+                return {"cls":cls, "id":val._id}
             else: raise FieldException("Document does not have an id. Be sure to save first.")
         elif isinstance(val, dict): 
             return val
@@ -141,7 +141,7 @@ class DynamicDocument(Field):
     def __call__(self):
         if isinstance(self._value, dict):
             cls = import_class(self._value['cls'])
-            return cls(id=self._value['_id'])
+            return cls(id=self._value['id'])
         else: raise Exception("Bad Value: %s" % self._value)
 
 
