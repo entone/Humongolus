@@ -779,12 +779,13 @@ class Index(object):
         if self._ttl: ob['expireAfterSeconds'] = self._ttl
         conn.ensure_index(self._key, **ob)
 
-def ensure_indexes():
-    for cls in Document.__subclasses__():
+def ensure_indexes(typ=Document):
+    for cls in typ.__subclasses__():
         try:
             _settings.LOGGER.debug("Starting Indexing: %s" % cls.__name__)
             cls.__ensureindexes__()
             _settings.LOGGER.debug("Done Indexing: %s" % cls.__name__)
+            ensure_indexes(cls)
         except Exception as e:
             _settings.LOGGER.warning(e)
 
