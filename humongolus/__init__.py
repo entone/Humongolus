@@ -683,7 +683,10 @@ class Document(base):
     
     @classmethod
     def __ensureindexes__(cls):
-        conn = cls._connection()
+        try:
+            conn = cls._connection()
+        except: pass
+
         for i in cls._indexes: i.create(conn)
 
     @classmethod
