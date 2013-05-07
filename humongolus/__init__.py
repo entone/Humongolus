@@ -763,6 +763,7 @@ class Index(object):
     _ttl = None
     _min = -180
     _max = 180
+    _sparse = False
 
     def __init__(self, name, **kwargs):
         self._name = name
@@ -778,6 +779,7 @@ class Index(object):
             min=self._min, 
             max=self._max, 
             name=self._name,             
+            sparse=self._sparse,
         )
         if self._ttl: ob['expireAfterSeconds'] = self._ttl
         conn.ensure_index(self._key, **ob)
