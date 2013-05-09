@@ -335,10 +335,10 @@ class Lazy(object):
         """when calling the lazy object it will return a mongodb cursor that yields models of the type.
         It will use the the _id of the base document and look in the key of the type class
         """
-        q = kwargs.get('query', {})
+        q = kwargs.pop('query', {})
         q.update({self._key:self._base._id})
         self._query.update(q)
-        return self._type.find(self._query)
+        return self._type.find(self._query, **kwargs)
 
     def _save(self, *args, **kwargs): pass
     def _errors(self, *args, **kwargs): pass
