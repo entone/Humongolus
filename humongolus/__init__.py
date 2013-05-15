@@ -704,10 +704,12 @@ class Document(base):
         """
         self.__class__.__remove__({"_id":self._id})
     
-    def update(self, update, **kwargs):
+    def update(self, update, query={}, **kwargs):
         """Update itself. Allows for custom saving, ie; not using safe=True
         """
-        self.__class__.__update__({"_id":self._id}, update, **kwargs)
+        q = {"_id":self._id}
+        q.update(query)
+        self.__class__.__update__(q, update, **kwargs)
     
 
     def json(self):
