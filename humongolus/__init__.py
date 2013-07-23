@@ -410,6 +410,7 @@ class List(list):
     def delete(self, collection, id, query, key):
         ob = self[key]
         collection.update({'_id':id}, {'$pull':{query:ob}})
+        del self[key]
     
     def _errors(self, namespace):
         errors = {}  
