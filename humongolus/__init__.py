@@ -397,7 +397,7 @@ class List(list):
     
     def _save(self, namespace):
         ret = {}
-        if len(self) == 0: return []
+        if len(self) == 0: return {namespace:[]}
         for id, obj in enumerate(self):
             ns = ".".join([namespace, str(id)])
             try:
