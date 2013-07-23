@@ -406,6 +406,10 @@ class List(list):
             except Exception as e:
                 ret[ns] = obj
         return ret
+
+    def delete(self, collection, id, query, key):
+        ob = self[key]
+        collection.update({'_id':id}, {'$pull':{query:ob}})
     
     def _errors(self, namespace):
         errors = {}  

@@ -14,7 +14,7 @@ from humongolus.field import FieldException
 
 conn = Connection()
 FORMAT = '%(asctime)-15s %(message)s'
-logging.basicConfig(format=FORMAT)
+logging.basicConfig(format=FORMAT, level=logging.DEBUG)
 logger = logging.getLogger("humongolus")
 
 orm.settings(logger=logger, db_connection=conn)
@@ -430,6 +430,18 @@ class Document(unittest.TestCase):
                 job = objects.Job()
                 job.title = "Engineer %s" % i
                 self.obj.jobs.append(job)
+
+    def test_list_delete(self):
+        person = self.obj
+        self.job.locations.append(self.loc)
+        person.jobs.append(self.job)
+        person.save()
+        id = person._id
+        p2 = objects.Female(id=id)
+        self.assertEqual(p2.jobs[0]._json(), self.person.get('jobs')[0])
+        p2.jobs.delete(p2._coll, id, 'jobs', 0)
+        p3 = objects.Female(id=id)
+        self.assertEqual(len(p3.jobs), 0)
     
     def test_bad_get(self):
         with self.assertRaises(AttributeError):
