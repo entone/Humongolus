@@ -407,9 +407,9 @@ class List(list):
                 ret[ns] = obj
         return ret
 
-    def delete(self, collection, id, query, key):
+    def delete(self, query, key):
         ob = self[key]
-        collection.update({'_id':id}, {'$pull':{query:ob}})
+        self._base._coll.update({'_id':self._base._id}, {'$pull':{query:ob}})
         del self[key]
     
     def _errors(self, namespace):

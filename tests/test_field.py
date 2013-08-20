@@ -439,7 +439,7 @@ class Document(unittest.TestCase):
         id = person._id
         p2 = objects.Female(id=id)
         self.assertEqual(p2.jobs[0]._json(), self.person.get('jobs')[0])
-        p2.jobs.delete(p2._coll, id, 'jobs', 0)
+        p2.jobs.delete('jobs', 0)
         p3 = objects.Female(id=id)
         self.assertEqual(len(p3.jobs), 0)
     
