@@ -66,10 +66,10 @@ class Field(unittest.TestCase):
         self.assertEqual(self.obj.name, "Anne")
 
         self.obj.name = "A"
-        self.assertEqual(self.obj._get("name")._error.__class__.__name__, "MinException")
+        self.assertEqual(self.obj._errs["name"].__class__.__name__, "MinException")
 
         self.obj.name = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        self.assertEqual(self.obj._get("name")._error.__class__.__name__, "MaxException")        
+        self.assertEqual(self.obj._errs["name"].__class__.__name__, "MaxException")        
 
     def test_integer(self):
 
@@ -77,10 +77,10 @@ class Field(unittest.TestCase):
         self.assertEqual(self.obj.age, 27)
 
         self.obj.age = -10
-        self.assertEqual(self.obj._get("age")._error.__class__.__name__, "MinException")
+        self.assertEqual(self.obj._errs["age"].__class__.__name__, "MinException")
 
         self.obj.age = 3001
-        self.assertEqual(self.obj._get("age")._error.__class__.__name__, "MaxException")
+        self.assertEqual(self.obj._errs["age"].__class__.__name__, "MaxException")
     
     def test_float(self):
 
@@ -88,10 +88,10 @@ class Field(unittest.TestCase):
         self.assertEqual(self.obj.height, 100.0)
 
         self.obj.height = -10
-        self.assertEqual(self.obj._get("height")._error.__class__.__name__, "MinException")
+        self.assertEqual(self.obj._errs["height"].__class__.__name__, "MinException")
 
         self.obj.height = 99999999
-        self.assertEqual(self.obj._get("height")._error.__class__.__name__, "MaxException")
+        self.assertEqual(self.obj._errs["height"].__class__.__name__, "MaxException")
 
     def test_autoincrement(self):
         last_val = conn["auto_increment"]["human"].find_one({"field":"human_id"}, fields={"val":True})
@@ -118,7 +118,7 @@ class Field(unittest.TestCase):
         scion.any_owner = self.obj
         s_id = scion.save()
         n_scion = objects.Scion(id=s_id)
-        p = n_scion._get("any_owner")()
+        p = n_scion.any_owner
         self.assertEqual(p._id, _id)
         car3 = objects.Scion()
         car3.any_owner = objects.Female()
@@ -127,7 +127,7 @@ class Field(unittest.TestCase):
             print cm.exception.errors
         
         with self.assertRaises(Exception) as cm:
-            car3._get("any_owner")()
+            car3.any_owner
 
     
     def compare_date(self, date1, date2):
@@ -165,14 +165,14 @@ class Field(unittest.TestCase):
         car = objects.Scion()
         car.owner = self.obj
         with self.assertRaises(FieldException) as cm:
-            car._get("owner")().name
+            car.owner.name
 
         h_id = self.obj.save()
         car = objects.Scion()
         car.owner = self.obj
         _id = car.save()
         car2 = objects.Scion(id=_id)
-        human = car2._get("owner")()
+        human = car2.owner
         self.assertEqual(human._id, h_id)
         car3 = objects.Scion()
         car3.owner = objects.Female()
@@ -182,24 +182,20 @@ class Field(unittest.TestCase):
 
     def test_geo(self):
         loc = objects.LocationGeo()
-        print loc._json()
         loc.city = "Chicago"
         loc.state = "IL"
 
         loc.geo = "sdjfhskljdfhskdhf"
-        self.assertEqual(loc._get("geo")._error.__class__.__name__, 'FieldException')
-        print loc._get("geo")._error
+        self.assertEqual(loc._errs["geo"].__class__.__name__, 'FieldException')
 
         loc.geo = [545454, 654654, 654654]
-        self.assertEqual(loc._get("geo")._error.__class__.__name__, 'FieldException')
-        print loc._get("geo")._error
+        self.assertEqual(loc._errs["geo"].__class__.__name__, 'FieldException')
 
         loc.geo = [48.326, -81.656565]
         self.assertEqual(loc.geo, [48.326, -81.656565])
 
     def test_boolean(self):
         loc = objects.LocationGeo()
-        print loc._json()
         loc.city = "Chicago"
         loc.state = "IL"
         loc.geo = [48.326, -81.656565]
@@ -218,11 +214,9 @@ class Field(unittest.TestCase):
     
     def test_phone(self):
         obj = objects.BadHuman()
-        print obj._get("phone")
         obj.name = "Anne"
         obj.phone = "sjkdhfkjshdfksjhdf"
-        print obj._get("phone")
-        self.assertEqual(obj._get("phone")._error.__class__.__name__, "FieldException")
+        self.assertEqual(obj._errs["phone"].__class__.__name__, "FieldException")
 
         obj.phone = "810-542.0141"
         self.assertEqual(obj.phone, u"+18105420141")
@@ -234,10 +228,10 @@ class Field(unittest.TestCase):
         obj = objects.BadHuman()
         obj.name = "Anne"
         obj.email = "sdsdff"
-        self.assertEqual(obj._get("email")._error.__class__.__name__, "FieldException")
+        self.assertEqual(obj._errs["email"].__class__.__name__, "FieldException")
 
         obj.email = "test@trest"
-        self.assertEqual(obj._get("email")._error.__class__.__name__, "FieldException")
+        self.assertEqual(obj._errs["email"].__class__.__name__, "FieldException")
 
         obj.email = "test@test.com"
         self.assertEqual(obj.email, "test@test.com")
@@ -253,13 +247,13 @@ class Field(unittest.TestCase):
         _id = obj.save()
         o = objects.BadHuman(id=_id)
         self.assertEqual(o.avatar, f_id)
-        print o._get("avatar")()
+        print o.avatar
         print o._get("avatar").list()
         print o._get("avatar").delete()
         self.assertEqual(obj._get("avatar").exists(), False)
         obj2 = objects.BadHuman()
         with self.assertRaises(FieldException) as cm:
-            obj2._get("avatar")()
+            obj2.avatar
 
         obj2.name = "Anne"
         obj2.avatar = objects.BadHuman()
@@ -384,7 +378,7 @@ class Document(unittest.TestCase):
     def test_json(self):
         self.job.locations.append(self.loc)
         self.obj.jobs.append(self.job)
-        j = self.obj._json()
+        j = self.obj._json(self.obj)
         del j["human_id"]
         self.assertEqual(j, self.person)
         _id = self.obj.save()
@@ -393,8 +387,8 @@ class Document(unittest.TestCase):
     
     def test_map(self):
         anne = objects.Female()
-        anne._map(self.person)
-        j = anne._json()
+        anne._map(anne, self.person)
+        j = anne._json(anne)
         del j["human_id"]
         self.assertEqual(j, self.person)
 
@@ -403,7 +397,7 @@ class Document(unittest.TestCase):
         self.obj.jobs.append(self.job)
         _id = self.obj.save()
         obj = self.obj.__class__(id=_id)
-        j = self.obj._json()
+        j = self.obj._json(self.obj)
         del j["human_id"]
         self.assertEqual(j, self.person)
 
@@ -414,7 +408,7 @@ class Document(unittest.TestCase):
         self.job.locations.append(self.loc)
         obj2.save()
         obj3 = self.obj.__class__(id=_id)
-        j = obj3._json()
+        j = obj3._json(obj3)
         del j["human_id"]
         self.assertEqual(j, self.person)
     
@@ -430,18 +424,6 @@ class Document(unittest.TestCase):
                 job = objects.Job()
                 job.title = "Engineer %s" % i
                 self.obj.jobs.append(job)
-
-    def test_list_delete(self):
-        person = self.obj
-        self.job.locations.append(self.loc)
-        person.jobs.append(self.job)
-        person.save()
-        id = person._id
-        p2 = objects.Female(id=id)
-        self.assertEqual(p2.jobs[0]._json(), self.person.get('jobs')[0])
-        p2.jobs.delete('jobs', 0)
-        p3 = objects.Female(id=id)
-        self.assertEqual(len(p3.jobs), 0)
     
     def test_bad_get(self):
         with self.assertRaises(AttributeError):
@@ -535,6 +517,7 @@ class Lazy(unittest.TestCase):
         self.obj.__class__.__remove__()
         objects.Car.__remove__()
 
+"""
 class Widget(unittest.TestCase):
 
     def setUp(self):
@@ -544,11 +527,11 @@ class Widget(unittest.TestCase):
         self.car.year = datetime.datetime(2007, 1, 1)
         self.text_html= "<input name='make' value='Isuzu' id='id_make' type='text' class='red checked' />"
         self.choice_html = "<select class='Woot' id='id_car' name='car' ><option value='%s' >Isuzu Rodeo 2007-01-01 00:00:00</option></select>"
-        self.object_html = """<ul class='test'>
+        self.object_html = "<ul class='test'>
                     <li>Make: Isuzu</li>
                     <li>Model: Rodeo</li>
                     <li>Year: 2007-01-01 00:00:00</li>
-                </ul>"""
+                </ul>"
     
 
     def test_render(self):
@@ -621,3 +604,4 @@ class Form(unittest.TestCase):
         for f in form:
             print f.label_tag()
             print f.render(cls="popup")
+"""

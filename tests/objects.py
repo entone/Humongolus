@@ -61,10 +61,12 @@ class CarDisplay(orm.Widget):
                 </ul>
         """ % (kwargs.get("cls", ""), self.object.make, self.object.model, self.object.year)
 
+class Colors(field.Choice):
+    _choices = ["Red", "Blue", "Green"]
 
 class Scion(Car):
     any_owner = field.DynamicDocument()
-    color = field.Choice(choices=["Red", "Blue", "Green"])
+    color = Colors()
     make = field.Char(default="Scion")
     model = field.Char(default="xA")
     year = field.Date(default=datetime.datetime(2007, 1, 1))
@@ -86,11 +88,14 @@ class Loca(orm.EmbeddedDocument):
     city = field.Char()
 
 
+class Cars(field.ModelChoice):
+    _type = Car
+
 class BadHuman(Human):
     unique = field.Integer()
     phone = field.Phone()
     email = field.Email(dbkey="em")
-    car = field.ModelChoice(type=Car)
+    car = Cars()
     active = field.Boolean()
     state = field.Char(validate=StateValidator)
     country = field.Char(validate=orm.FieldValidator)

@@ -138,20 +138,27 @@ class DynamicDocument(Field):
             return val
         else: raise FieldException("%s is not a valid document type" % val.__class__.__name__)
     
-    def __call__(self):
-        if isinstance(self._value, dict):
-            cls = import_class(self._value['cls'])
-            return cls(id=self._value['id'])
-        else: raise Exception("Bad Value: %s" % self._value)
+    def __call__(self, instance):
+        d = instance._data.get(self._name)
+        if isinstance(d, dict):
+            cls = import_class(d['cls'])
+            return cls(id=d['id'])
+        else: raise Exception("Bad Value: %s" % d)
 
 
 class Choice(Char):
     _choices = []
 
-    def clean(self, val, doc=None):
+    def __init__(self, *args, **kwargs):
+        if self.__class__ == Choice:
+            raise Exception("Choice fields must be subclassed")
+
+        super(Choice, self).__init__(*args, **kwargs)
+
+    def clean(self, val, doc=None):        
         val = super(Choice, self).clean(val, doc=doc)
         vals = [opt['value'] if isinstance(opt, dict) else opt for opt in self._choices]
-        if not val in vals: raise FieldException("%s is not a valid option")
+        if not val in vals: raise FieldException("%s is not a valid option" % val)
         return val
 
     def get_choices(self, render=None):
@@ -181,8 +188,6 @@ class CollectionChoice(Choice):
 
     def get_choices(self, render=None):
         if render:
-            print self._db
-            print self._collection
             cur = self._conn[self._db][self._collection].find(self._query, fields=self._fields)
             cur = cur.sort(self._sort) if self._sort else cur
             return [render(i) for i in cur]

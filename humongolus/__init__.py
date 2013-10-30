@@ -226,28 +226,31 @@ class Field(object):
     __args__ = ()
 
     def __init__(self, *args, **kwargs):
-        
         self.logger = _settings.LOGGER
         self._conn = _settings.DB_CONNECTION
-        self.__kwargs__ = kwargs
-        self.__args__ = args
         for k,v in kwargs.iteritems():
             try:
-                setattr(self, "_%s" % k, v)
+                setattr(cls, "_%s" % k, v)
             except: pass
-        
-        self._dirty = self.clean(self._default, doc=None) if self._default else None
-        self._value = self.clean(self._default, doc=None) if self._default else None
-        self._error = None
 
-    def _clean(self, val, dirty=None, doc=None):
-        self._error = None
+    def __get__(self, instance, owner):
+        if callable(self): return self(instance)
+        val = instance._data.get(self._name)
+        if not val and self._default: return self._default
+        if val: return val
+        return None
+
+    def __set__(self, instance, value):        
+        val = self._clean(instance, value)
+        instance._data[self._name] = val
+
+    def _clean(self, instance, val, dirty=None, doc=None):
+        instance._errs[self._name] = None
         self._isrequired(val)
-        if not val in EMPTY:
-            val = self.clean(val, doc=doc)
-        val = self._validate(self).validate(val, doc=doc) if self._validate else val 
-        self._dirty = self._value if not dirty else dirty
-        self._value = val
+        if not val in EMPTY: val = self.clean(val, doc=doc)
+        val = self._validate(self).validate(val, doc=doc) if self._validate else val
+        instance._dirty[self._name] = instance._data.get(self._name) if not dirty else dirty
+        return val
     
     def clean(self, val, doc=None): 
         """Override to apply custom parsing of incoming value. 
@@ -263,43 +266,30 @@ class Field(object):
     def _isrequired(self, val):
         if val in EMPTY and self._required: raise FieldException("Required Field")
 
-    def _json(self):
-        return self._value
+    def _json(self, instance):
+        return getattr(instance, self._name)
     
-    def _save(self, namespace):
+    def _save(self, instance, namespace):
         obj = {}
-        if self._value != self._dirty: obj[namespace] = self._value
+        if instance._data[self._name] != instance._dirty[self._name]: obj[namespace] = instance._data[self._name]
         return obj
     
-    def _errors(self, namespace):
+    def _errors(self, instance, namespace):
         errors = {}
         try:
             self._isrequired(self._value)
-        except Exception as e:
-            self._error = e
-        if self._error: errors[namespace] = self._error
+        except Exception as e:            
+            instance._errs[self._name] = e
+        if instance._errs[self._name]: errors[namespace] = instance._errors[self._name]
         return errors
     
-    def _map(self, val, init=False, doc=None):
+    def _map(self, instance, val, init=False, doc=None):
         try:
-            if init: self._clean(val, dirty=val, doc=doc)
-            else: self._clean(val, doc=doc)
+            if init: val = self._clean(instance, val, dirty=val, doc=doc)
+            else: val = self._clean(instance, val, doc=doc)
+            instance._data[self._name] = val
         except Exception as e:
-            self._error = e
-    
-    def render(self, *args, **kwargs): pass
-    
-    def __repr__(self):
-        try:
-            return self._value
-        except Exception as e:
-            return None
-
-    def __str__(self):
-        return str(self._value)
-    
-    def __unicode__(self):
-        return unicode(self._value)
+            instance._errors[self._name] = e
 
 class Lazy(object):
     """Object for describing a "foreign key" relationship across Models"""
@@ -316,21 +306,14 @@ class Lazy(object):
     _choices = []
 
     def __init__(self, *args, **kwargs):
-        """
-        :Parameters:
-            - `type`: the type of :class: `~Document` returned. must be an instance of :class: `~Document`
-            - `key`: the "foreign key" to look up the types by. must be an attribute of type.
-
-        """
         self.logger = _settings.LOGGER
-        self.__args__ = args
         self.__kwargs__ = kwargs
+        self.__args__ = args
         for k,v in kwargs.iteritems():
             try:
                 setattr(self, "_%s" % k, v)
             except: pass
-
-    
+        
     def __call__(self, **kwargs):
         """when calling the lazy object it will return a mongodb cursor that yields models of the type.
         It will use the the _id of the base document and look in the key of the type class
@@ -370,7 +353,6 @@ class List(list):
     __kwargs__ = {}
     __args__ = ()
 
-
     def __init__(self, *args, **kwargs):
         """
         :Parameters:
@@ -386,7 +368,6 @@ class List(list):
             try:
                 setattr(self, "_%s" % k, v)
             except: pass
-        
 
     def append(self, obj):
         types = self._type if self._type is list else [self._type]
@@ -395,14 +376,14 @@ class List(list):
             super(List, self).append(obj)
         else: raise Exception("%s not of type %s" % (obj.__class__.__name__, self._type.__name__))
     
-    def _save(self, namespace):
+    def _save(self, instance,  namespace):
         ret = {}
         if len(self) == 0: return {namespace:[]}
         for id, obj in enumerate(self):
             ns = ".".join([namespace, str(id)])
             try:
-                if obj._inited: ret.update(obj._save(namespace=ns))
-                else: ret.update({ns:obj._json()})
+                if obj._inited: ret.update(obj._save(self, namespace=ns))
+                else: ret.update({ns:obj._json(self)})
             except Exception as e:
                 ret[ns] = obj
         return ret
@@ -412,33 +393,33 @@ class List(list):
         self._base._coll.update({'_id':self._base._id}, {'$pull':{query:ob}})
         del self[key]
     
-    def _errors(self, namespace):
+    def _errors(self, instance, namespace):
         errors = {}  
         for id, obj in enumerate(self):
             ns = ".".join([namespace, str(id)])
             try:
-                errors.update(obj._errors(namespace=ns))
+                errors.update(obj._errors(self, namespace=ns))
             except Exception as e: pass
         return errors
 
            
-    def _map(self, val, init=False, doc=None):
+    def _map(self, instance, val, init=False, doc=None):
         for item in val:
             try:
                 obj = self._type()
                 try:
                     item = item.__hargs__
                 except:pass
-                obj._map(item, init=init, doc=None)
+                obj._map(self, item, init=init, doc=None)
                 self.append(obj)
             except:
                 self.append(item)
 
-    def _json(self):
+    def _json(self, instance):
         ret = []
         for obj in self:
             try:
-                ret.append(obj._json())
+                ret.append(obj._json(self))
             except:
                 ret.append(obj)
         
@@ -465,46 +446,62 @@ class base(dict):
     _parent = None
     _name = None
     _dbkey = None
+    _bases = None
+    _data = {}
+    _dirty = {}
+    _errs = {}
     __kwargs__ = {}
     __args__ = ()
     __keys__ = []
     __doc__ = {}
 
+    def __new__(cls, *args, **kwargs):
+        cls.logger = _settings.LOGGER
+        cls.__args__ = args
+        cls.__kwargs__ = kwargs
+        cls.__keys__ = set()
+        cls.__kwargs__ = kwargs
+        cls.__args__  = args
+        if not cls._bases: 
+            cls._bases = cls._getbases()
+        return super(base, cls).__new__(cls)
 
     def __init__(self, *args, **kwargs):
-        self.logger = _settings.LOGGER
-        self.__kwargs__ = kwargs
-        self.__args__ = args
+        self._dirty = {}
+        self._data = {}
+        self._errs = {}
         self._inited = False
-        b = kwargs.get("base", None)
-        self._base = b if b != self else None
-        self.__keys__ = set()
-        for cls in reversed(self.__class__._getbases()):
-            for k,v in cls.__dict__.iteritems():
+        for c in reversed(self._bases):
+            for k,v in c.__dict__.iteritems():
                 if isinstance(v, (base, Field, List, Lazy)):
                     key = v._dbkey if hasattr(v, '_dbkey') and v._dbkey else k
                     if not isinstance(v, Lazy): self.__keys__.add(unicode(key))
-                    v.__kwargs__["base"] = b
-                    v.__kwargs__['name'] = k
-                    v.__kwargs__['parent'] = self
-                    self.__dict__[k] = v.__class__(*v.__args__, **v.__kwargs__)
+                    if not isinstance(v, Field): v = v.__class__(*v.__args__, **v.__kwargs__)
+                    v._name = k
+                    self.__dict__[k] = v
+        
+        #self._data = {k:getattr(self, k) for k in self.__keys__}        
     
+    """
     def __setattr__(self, key, val):
         try:
             fi = self.__dict__.get(key, None)
-            fi._clean(val)  
+            val = fi._clean(val)
+            self._data[key] = val
         except FieldException as e:
-            fi._error = e
+            self._errors[key] = e
         except Exception as e:
             self.__dict__[key] = val
-    
+
     def __getattribute__(self, key):
         try:
             obj = object.__getattribute__(self, key)
-            if isinstance(obj, Field): return obj._value
+            if isinstance(obj, Field): 
+                if callable(obj): return obj
+                return self._data.get(key)
             else: return obj
         except Exception as e: raise e
-
+    """
     def __nonzero__(self):
         return True
 
@@ -525,27 +522,27 @@ class base(dict):
             raise AttributeError("%s is an invalid attribute") 
 
 
-    def _save(self, namespace=None):
+    def _save(self, instance, namespace=None):
         obj = {}
         for k,v in self.__dict__.iteritems():
             try:
                 key = v._dbkey if v._dbkey else k
                 ns = ".".join([namespace, key]) if namespace else key
-                obj.update(v._save(namespace=ns))
+                obj.update(v._save(self, namespace=ns))
             except Exception as e: pass 
         return obj
     
-    def _errors(self, namespace=None):
+    def _errors(self, instance, namespace=None):
         errors = {}
         for k,v in self.__dict__.iteritems():
             try:
                 key = v._dbkey if v._dbkey else k
                 ns = ".".join([namespace, key]) if namespace else key
-                errors.update(v._errors(namespace=ns))
+                errors.update(v._errors(self, namespace=ns))
             except Exception as e: pass
         return errors
 
-    def _map(self, vals, init=False, doc=None):
+    def _map(self, instance, vals, init=False, doc=None):
         self._inited = True
         try:
             self.__created__ = vals['__created__']
@@ -556,17 +553,17 @@ class base(dict):
             try:
                 key = v._dbkey if hasattr(v,'_dbkey') and v._dbkey else k
                 val = vals[key]
-                v._map(val, init=init, doc=doc)
+                v._map(self, val, init=init, doc=doc)
             except Exception as e: 
                 pass
 
-    def _json(self):
+    def _json(self, instance):
         obj = {}
         for k,v in self.__dict__.iteritems():
             try:
                 if not isinstance(v, Lazy):
                     key = v._dbkey if v._dbkey else k 
-                    obj[key] = v._json()
+                    obj[key] = v._json(self)
             except: pass
         
         return obj
@@ -609,14 +606,17 @@ class Document(base):
     __hargs__ = {}
     __hargskeys__ = None
 
+    def __new__(cls, *args, **kwargs):
+        cls._conn = _settings.DB_CONNECTION
+        cls._coll = cls._conn[cls._db][cls._collection]
+        return super(Document, cls).__new__(cls)
+
     def __init__(self, *args, **kwargs):
         kwargs['base'] = self
         super(Document, self).__init__(*args, **kwargs)
         self._id = None
         self.__hargs__ = {}
         self.__hargskeys__ = set()
-        self._conn = _settings.DB_CONNECTION
-        self._coll = self._conn[self._db][self._collection]
         if kwargs.get('id', None): 
             self._id = ObjectId(kwargs['id'])
             self._doc()
@@ -634,13 +634,13 @@ class Document(base):
             self.__hargskeys__.add(key)
             #an incomplete document from mongo will never call _map
             if self.__keys__.issubset(self.__hargskeys__) and self._id:                
-                self._map(self.__hargs__, init=True)
+                self._map(self, self.__hargs__, init=True)
         elif key == '_id': self._id = val
 
     def _doc(self):
         doc = self._coll.find_one({'_id':self._id})
         if not doc: raise DocumentException("Invalid ObjectID")
-        self._map(doc, init=True)
+        self._map(self, doc, init=True)
 
     @property
     def active(self):
@@ -721,7 +721,7 @@ class Document(base):
     def json(self):
         """Return json representation of itself.
         """
-        obj = self._json()
+        obj = self._json(self)
         obj['_id'] = self._id
         obj['__active__'] = self.active
         obj['__created__'] = self.created
@@ -738,22 +738,22 @@ class Document(base):
         will raise a DocumentException if there are errors from validation, will also throw a pymongo Exception if insert or update fails.
 
         """
-        errors = self._errors()
+        errors = self._errors(self)
         if len(errors.keys()):
             self.logger.error(errors) 
             raise DocumentException(errors)
         if not self._id:
-            self._save()
+            self._save(self)
             self.__created__ = datetime.datetime.utcnow()
             self.__modified__ = datetime.datetime.utcnow()
             self.__active__ = True
-            obj = self._json()
+            obj = self._json(self)
             obj['__created__'] = self.__created__
             obj['__modified__']= self.__modified__
             obj['__active__'] = self.__active__
             self._id = self._coll.insert(obj, safe=True)    
         else:
-            obj = self._save()
+            obj = self._save(self)
             self.__modified__ = datetime.datetime.utcnow()
             obj['__modified__'] = self.__modified__
             up = {'$set':obj}

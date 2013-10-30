@@ -57,6 +57,8 @@ class Human(orm.Document):
     state = field.CollectionChoice(db='test', collection='states', sort=[('fullname',1)])
     email = field.Email()
 
+Human.__remove__()
+
 class Female(Human):
     genitalia = field.Char(default='inny')
 
@@ -96,7 +98,14 @@ loc.state = "IL"
 job.locations.append(loc)
 chris.jobs.append(job)
 
-print chris._json()
+print chris.name
+print chris.location.city
+print chris.location.address.zip
+print chris.jobs[0].title
+print chris.jobs[0].locations[0].state
+
+
+print chris.json()
 
 _id = chris.save()
 
@@ -118,103 +127,7 @@ car2.year = datetime.datetime(1965, 1, 1)
 print car2
 c_id = car2.save()
 
-print car._get("owner")().name
+print car.owner.name
 
-
-def car_disp(car):
-    return {"value":car._id, "display":"%s %s %s" % (car.make, car.model, car.year)}
-
-def coll_display(doc):
-    return {'value':doc.get('abbrv'), 'display':doc.get('fullname', None)}
-
-def job_list(obj):
-    ar = []
-    for i in obj:
-        ar.append({"value":i.title, "display":"%s: %s" % (i.employer, i.title)})
-    return ar
-
-class AddressForm(widget.FieldSet):
-    _fields = ["street", "street2", "zip"]
-
-    street = widget.Input(cls="woot")
-    street2 = widget.TextArea(cls='test', rows=100, cols=30)
-    zip = widget.Input()
-
-class LocationForm(widget.FieldSet):
-    _fields = ["city", "state", "address"]
-    cls = "location"
-
-    city = widget.Input()
-    state = widget.Input()
-    address = AddressForm()
-
-class PersonForm(widget.Form):
-    action = '/save_person'
-    id = "person_%s" % chris._id
-    _prepend = "test"
-    #if anyone knows a better way to maintain the order of the fields, please let me know!
-    _fields = ["human_id", "name", "age", "car", "location", "jobs", "email"]
-
-    human_id = widget.Input(label="ID")
-    name = widget.Input(label="Name")
-    age = widget.Input(label="Age", description="This is today minus the date you were born in seconds.")
-    car = widget.Select(label="Car", item_render=car_disp)
-    location = LocationForm(label="Location")
-    jobs = widget.MultipleSelect(label="Jobs", item_render=job_list)
-    email = widget.Input(label="Email")
-
-submit = {
-    "test_name":"None",
-    "test_human_id":"32226",
-    "test_age":None,
-    "test_weight":"175",
-    "test_car":"ffed81a42000002",
-    "test_location-city":"Chicago",
-    "test_location-state":"IL",
-    "test_location-address-street":"549 Randolph",
-    "test_location-address-street2":"450",
-    #"location-address-zip":"60626"
-}
-
-print states
-conn['test']['states'].remove()
-for k,v in states.iteritems():
-    conn['test']['states'].insert({"abbrv":k, 'fullname':v})
-    
-
-class SelectorForm(widget.Form):
-    _fields = ['car', 'color', 'state']
-    car = widget.Select(label="Car", item_render=car_disp)
-    color = widget.Select(label="Color")
-    state = widget.Select(label="State", item_render=coll_display)
-
-print "SELECTS:"
-
-a = SelectorForm(object=chris)
-print a.render()
-
-form = PersonForm(object=chris, data=submit)
-
-print form.car.render(cls="try-this")
-
-print form.render()
-
-try:
-    form.validate()
-    print "Validated"
-except orm.DocumentException as e:
-    print e
-    for f in form:
-        if f.errors:
-            print f.attributes.name
-            if f.attributes.description: print f.attributes.description
-            print f.errors
-    
-    print form.errors
-    print e.errors
-except Exception as e:
-    print e
-
-form2 = PersonForm(object=Human(), prepend=None)
-
-print form2.render()
+c = Male(id=_id)
+print c.json()
