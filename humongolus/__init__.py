@@ -17,6 +17,7 @@ Humongolus is a Persistence and Widget Framework for MongoDB written in Python
 """
 
 import settings as _settings
+import mongo
 import datetime
 import pymongo
 from bson.objectid import ObjectId
@@ -620,8 +621,8 @@ class Document(base):
         self._id = None
         self.__hargs__ = {}
         self.__hargskeys__ = set()
-        self._conn = _settings.DB_CONNECTION
-        self._coll = self._conn[self._db][self._collection]
+        self._conn = _settings.DB_CONNECTION        
+        self._coll = self.__class__._connection()
         if kwargs.get('data'):
             self._map(kwargs.get('data'), init=True)
         if kwargs.get('id'): 
@@ -670,7 +671,7 @@ class Document(base):
     @classmethod
     def _connection(cls):
         _conn = _settings.DB_CONNECTION
-        _coll = _conn[cls._db][cls._collection]
+        _coll = mongo.Collection(cls, database=_conn[cls._db], name=cls._collection)
         return _coll
 
     @classmethod
@@ -682,7 +683,7 @@ class Document(base):
         
         extra kwargs paramter is as_dict this will return the raw dictionary from mongo, this also allows you to use the "fields" parameter
         """
-        if not kwargs.get("as_dict", None): kwargs['as_class'] = cls
+
         return cls._connection().find(*args, **kwargs)
     
     @classmethod
@@ -692,7 +693,7 @@ class Document(base):
             - `*args`: passed directly to Connection.find_one()
             - `**kwargs`: passed directly to Connection.find_one()
         """
-        if not kwargs.get("as_dict", None): kwargs['as_class'] = cls
+        if not kwargs.get("as_dict"): kwargs['as_class'] = cls
         return cls._connection().find_one(*args, **kwargs)    
     
     @classmethod
