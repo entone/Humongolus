@@ -728,6 +728,7 @@ class Document(base):
         self.__created__ = vals.get('__created__')
         self.__modified__ = vals.get('__modified__')
         self.__active__ = vals.get('__active__')
+        self._id = vals.get('_id')
         super(Document, self)._map(vals, *args, **kwargs)
     
 
