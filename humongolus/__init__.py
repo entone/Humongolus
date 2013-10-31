@@ -693,7 +693,6 @@ class Document(base):
             - `*args`: passed directly to Connection.find_one()
             - `**kwargs`: passed directly to Connection.find_one()
         """
-        if not kwargs.get("as_dict"): kwargs['as_class'] = cls
         return cls._connection().find_one(*args, **kwargs)    
     
     @classmethod
