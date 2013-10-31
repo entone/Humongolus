@@ -646,8 +646,7 @@ class Document(base):
         elif key == '_id': self._id = val
 
     def _doc(self):
-        doc = self._coll.find_one({'_id':self._id})
-        if not doc: raise DocumentException("Invalid ObjectID")
+        doc = _settings.DB_CONNECTION[self._db][self._collection].find_one({'_id':self._id})
         self._map(doc, init=True)
 
     @property
