@@ -233,13 +233,28 @@ class Field(object):
         self.__args__ = args
         for k,v in kwargs.iteritems():
             try:
-                setattr(self, "_%s" % k, v)
+                setattr(self, "_"+k, v)
             except: pass
         
         self._dirty = self.clean(self._default, doc=None) if self._default else None
         self._value = self.clean(self._default, doc=None) if self._default else None
         self._error = None
 
+    
+    def __get__(self, instance, owner):
+        me = instance.__dict__.get(self._name)
+        if me:
+            if callable(me): return me()
+            return me._value
+
+    def __set__(self, instance, value):
+        me = instance.__dict__.get(self._name)
+        if me:
+            try:
+                me._clean(value)
+            except FieldException as e:
+                me._error = e
+    
     def _clean(self, val, dirty=None, doc=None):
         self._error = None
         self._isrequired(val)
@@ -327,7 +342,7 @@ class Lazy(object):
         self.__kwargs__ = kwargs
         for k,v in kwargs.iteritems():
             try:
-                setattr(self, "_%s" % k, v)
+                setattr(self, "_"+k, v)
             except: pass
 
     
@@ -384,7 +399,7 @@ class List(list):
         self.__args__ = args
         for k,v in kwargs.iteritems():
             try:
-                setattr(self, "_%s" % k, v)
+                setattr(self, "_"+k, v)
             except: pass
         
 
@@ -465,11 +480,27 @@ class base(dict):
     _parent = None
     _name = None
     _dbkey = None
+    _bases = None
+    _fields = {}
     __kwargs__ = {}
     __args__ = ()
     __keys__ = []
     __doc__ = {}
 
+    def __new__(cls, *args, **kwargs):
+        if not cls._bases or cls._bases[0] != cls:
+            cls._bases = cls._getbases()
+            cls._fields = {}
+            cls.__keys__ = set()
+            for c in reversed(cls._bases):
+                for k,v in c.__dict__.iteritems():
+                    if isinstance(v, (base, Field, List, Lazy)):
+                        key = v._dbkey if v._dbkey else k
+                        if not isinstance(v, Lazy): cls.__keys__.add(unicode(key))
+                        v._name = k
+                        cls._fields[k] = v
+        
+        return super(base, cls).__new__(cls)
 
     def __init__(self, *args, **kwargs):
         self.logger = _settings.LOGGER
@@ -477,44 +508,24 @@ class base(dict):
         self.__args__ = args
         self._inited = False
         b = kwargs.get("base", None)
-        self._base = b if b != self else None
-        self.__keys__ = set()
-        for cls in reversed(self.__class__._getbases()):
-            for k,v in cls.__dict__.iteritems():
-                if isinstance(v, (base, Field, List, Lazy)):
-                    key = v._dbkey if hasattr(v, '_dbkey') and v._dbkey else k
-                    if not isinstance(v, Lazy): self.__keys__.add(unicode(key))
-                    v.__kwargs__["base"] = b
-                    v.__kwargs__['name'] = k
-                    v.__kwargs__['parent'] = self
-                    self.__dict__[k] = v.__class__(*v.__args__, **v.__kwargs__)
-    
-    def __setattr__(self, key, val):
-        try:
-            fi = self.__dict__.get(key, None)
-            fi._clean(val)  
-        except FieldException as e:
-            fi._error = e
-        except Exception as e:
-            self.__dict__[key] = val
-    
-    def __getattribute__(self, key):
-        try:
-            obj = object.__getattribute__(self, key)
-            if isinstance(obj, Field): return obj._value
-            else: return obj
-        except Exception as e: raise e
+        self._base = b if b != self else None        
+        for k,v in self._fields.iteritems():
+            v.__kwargs__["base"] = b
+            v.__kwargs__['name'] = k
+            v.__kwargs__['parent'] = self
+            v._name = k
+            self.__dict__[k] = v.__class__(*v.__args__, **v.__kwargs__)
 
     def __nonzero__(self):
         return True
 
     @classmethod
-    def _getbases(cls):
-        b = [cls]        
+    def _getbases(cls, b=None):
+        if not b: b = [cls]
+        else: b.append(cls)
         for i in cls.__bases__:
-            b.append(i)
             try:
-                b.extend(i._getbases())
+                b = i._getbases(b=b)
             except:pass
         return b
     
@@ -522,7 +533,7 @@ class base(dict):
         try:
             return self.__dict__[key]
         except:
-            raise AttributeError("%s is an invalid attribute") 
+            raise AttributeError("%s is an invalid attribute" % key) 
 
 
     def _save(self, namespace=None):
@@ -547,18 +558,12 @@ class base(dict):
 
     def _map(self, vals, init=False, doc=None):
         self._inited = True
-        try:
-            self.__created__ = vals['__created__']
-            self.__modified__ = vals['__modified__']
-            self.__active__ = vals['__active__']
-        except: pass
         for k,v in self.__dict__.iteritems():
             try:
-                key = v._dbkey if hasattr(v,'_dbkey') and v._dbkey else k
+                key = v._dbkey if v._dbkey else k
                 val = vals[key]
                 v._map(val, init=init, doc=doc)
-            except Exception as e: 
-                pass
+            except Exception as e: pass
 
     def _json(self):
         obj = {}
@@ -617,9 +622,11 @@ class Document(base):
         self.__hargskeys__ = set()
         self._conn = _settings.DB_CONNECTION
         self._coll = self._conn[self._db][self._collection]
-        if kwargs.get('id', None): 
+        if kwargs.get('data'):
+            self._map(kwargs.get('data'), init=True)
+        if kwargs.get('id'): 
             self._id = ObjectId(kwargs['id'])
-            self._doc()
+            self._doc()        
     """
     this is called by pymongo for each key:val pair for each document
     returned by find and find_one
@@ -716,6 +723,12 @@ class Document(base):
         q = {"_id":self._id}
         q.update(query)
         self.__class__.__update__(q, update, **kwargs)
+
+    def _map(self, vals, *args, **kwargs):
+        self.__created__ = vals.get('__created__')
+        self.__modified__ = vals.get('__modified__')
+        self.__active__ = vals.get('__active__')
+        super(Document, self)._map(vals, *args, **kwargs)
     
 
     def json(self):

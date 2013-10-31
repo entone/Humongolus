@@ -26,6 +26,7 @@ class Field(unittest.TestCase):
         self.genitalia = "inny"
         self.obj = objects.Female()
         self.job = objects.Job()
+        self.loca = objects.LocationGeo()
         self.location = objects.Location()
     
     def test_validation(self):
@@ -182,29 +183,24 @@ class Field(unittest.TestCase):
 
     def test_geo(self):
         loc = objects.LocationGeo()
-        print loc._json()
         loc.city = "Chicago"
         loc.state = "IL"
-
         loc.geo = "sdjfhskljdfhskdhf"
         self.assertEqual(loc._get("geo")._error.__class__.__name__, 'FieldException')
-        print loc._get("geo")._error
 
         loc.geo = [545454, 654654, 654654]
         self.assertEqual(loc._get("geo")._error.__class__.__name__, 'FieldException')
-        print loc._get("geo")._error
 
         loc.geo = [48.326, -81.656565]
         self.assertEqual(loc.geo, [48.326, -81.656565])
 
     def test_boolean(self):
         loc = objects.LocationGeo()
-        print loc._json()
+        print loc.__class__
         loc.city = "Chicago"
         loc.state = "IL"
         loc.geo = [48.326, -81.656565]
         loc.active = "kjsdhfksjhdflksjhdflksjhdf"
-        print loc.active
         self.assertEqual(loc.active, True)
 
         loc.active = 0

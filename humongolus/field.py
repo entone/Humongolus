@@ -74,6 +74,7 @@ class Boolean(Field):
     def clean(self, val, doc=None):
         try:
             if isinstance(val, bool): return val
+            v = bool(val)
             return bool(val)
         except: raise FieldException("%s invalid boolean" % val)
 
@@ -181,8 +182,6 @@ class CollectionChoice(Choice):
 
     def get_choices(self, render=None):
         if render:
-            print self._db
-            print self._collection
             cur = self._conn[self._db][self._collection].find(self._query, fields=self._fields)
             cur = cur.sort(self._sort) if self._sort else cur
             return [render(i) for i in cur]
