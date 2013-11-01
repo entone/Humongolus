@@ -237,8 +237,8 @@ class Field(object):
                 setattr(self, "_"+k, v)
             except: pass
         
-        self._dirty = self.clean(self._default, doc=None) if self._default not in EMPTY else None
-        self._value = self.clean(self._default, doc=None) if self._default not in EMPTY else None
+        self._dirty = self.clean(self._default, doc=None) if not self._default in EMPTY else None
+        self._value = self.clean(self._default, doc=None) if not self._default in EMPTY else None
         self._error = None
     
     def __get__(self, instance, owner):
