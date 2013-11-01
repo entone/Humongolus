@@ -10,7 +10,7 @@ class Cursor(cursor.Cursor):
         super(Cursor, self).__init__(*args, **kwargs)
 
     def __getitem__(self, *args, **kwargs):
-        obj = super(Cursor, self).__getnext__(*args, **kwargs)
+        obj = super(Cursor, self).__getitem__(*args, **kwargs)
         if isinstance(obj, dict): return self._class(data=obj)
         return obj
 
