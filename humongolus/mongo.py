@@ -9,6 +9,11 @@ class Cursor(cursor.Cursor):
         self._as_dict = kwargs.pop("as_dict", None)
         super(Cursor, self).__init__(*args, **kwargs)
 
+    def __getitem__(self, *args, **kwargs):
+        obj = super(Cursor, self).__getnext__(*args, **kwargs)
+        if isinstance(obj, dict): return self._class(data=obj)
+        return obj
+
     def next(self, *args, **kwargs):
         obj = super(Cursor, self).next(*args, **kwargs)
         if self._as_dict: return obj
