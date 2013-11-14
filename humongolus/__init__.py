@@ -646,7 +646,8 @@ class Document(base):
 
     def _doc(self):
         doc = _settings.DB_CONNECTION[self._db][self._collection].find_one({'_id':self._id})
-        if doc: self._map(doc, init=True)
+        if not doc: raise Exception("Invalid ObjectId: %s" % self._id)
+        self._map(doc, init=True)
 
     @property
     def active(self):
