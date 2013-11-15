@@ -625,8 +625,7 @@ class Document(base):
         if kwargs.get('data'):
             self._map(kwargs.get('data'), init=True)
         if kwargs.get('id'): 
-            self._id = kwargs['id']
-            self._doc()        
+            self._doc(kwargs['id'])        
     """
     this is called by pymongo for each key:val pair for each document
     returned by find and find_one
@@ -644,9 +643,12 @@ class Document(base):
                 self._map(self.__hargs__, init=True)
         elif key == '_id': self._id = val
 
-    def _doc(self):
-        self._id = ObjectId(self._id)
-        doc = _settings.DB_CONNECTION[self._db][self._collection].find_one({'_id':self._id})
+    def _get_doc(self, id):
+        self._id = ObjectId(id)
+        return _settings.DB_CONNECTION[self._db][self._collection].find_one({'_id':self._id})
+
+    def _doc(self, id):
+        doc = self._get_doc(id)
         if not doc: raise Exception("Invalid ObjectId: %s" % self._id)
         self._map(doc, init=True)
 
