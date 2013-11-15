@@ -648,8 +648,7 @@ class Document(base):
 
     def _doc(self, id):
         doc = self._get_doc(id)
-        if not doc: raise Exception("Invalid ObjectId: %s" % self._id)
-        self._id = doc.get('_id')
+        if not doc: raise Exception("Invalid ObjectId: %s" % id)
         self._map(doc, init=True)
 
     @property
