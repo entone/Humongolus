@@ -340,6 +340,7 @@ class Lazy(object):
         self.logger = _settings.LOGGER
         self.__args__ = args
         self.__kwargs__ = kwargs
+        self._query = {}
         for k,v in kwargs.iteritems():
             try:
                 setattr(self, "_"+k, v)
