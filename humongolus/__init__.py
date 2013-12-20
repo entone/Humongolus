@@ -69,11 +69,19 @@ class FieldValidator(object):
         """
         return val
 
-class FieldException(Exception): 
+class BaseException(Exception):
+    def json(self):
+        return dict(
+            type=self.__class__.__name__,
+            message=self.message,
+            status=self.status_code,
+        )
+
+class FieldException(BaseException): 
     """Exception for field validation errors.
     """
     pass
-class DocumentException(Exception):
+class DocumentException(BaseException):
     """Exception thrown when an error/errors are raised when saving a Document
     """
     errors = {}
@@ -90,7 +98,16 @@ class DocumentException(Exception):
     def __str__(self):
         return str(self.errors) 
 
-class InvalidObjectId(Exception): 
+    def json(self):
+        return dict(
+            type=self.__class__.__name__,
+            message=self.message,
+            status=self.status_code,
+            errors=self.errors
+        )
+
+
+class InvalidObjectId(BaseException): 
     status_code = 404
 
 class Attributes(object):
