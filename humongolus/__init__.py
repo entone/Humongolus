@@ -90,6 +90,9 @@ class DocumentException(Exception):
     def __str__(self):
         return str(self.errors) 
 
+class InvalidObjectId(Exception): 
+    status_code = 404
+
 class Attributes(object):
     _id = None
     _name = None
@@ -649,7 +652,7 @@ class Document(base):
 
     def _doc(self, id):
         doc = self._get_doc(id)
-        if not doc: raise Exception("Invalid ObjectId: %s" % id)
+        if not doc: raise InvalidObjectId(id)
         self._map(doc, init=True)
 
     @property
