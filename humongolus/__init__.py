@@ -425,7 +425,7 @@ class List(list):
         
 
     def append(self, obj):
-        types = self._type if self._type is list else [self._type]
+        types = self._type if self._type.__class__ is list else [self._type]
         if self._length and len(self) >= self._length: raise Exception("max length: %s exceeded" % self._length)
         if obj.__class__ in types:
             super(List, self).append(obj)
