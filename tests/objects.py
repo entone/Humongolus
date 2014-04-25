@@ -42,6 +42,10 @@ class Female(Human):
 class Male(Human):
     genitalia = field.Char(default='outy')
 
+class Property(orm.EmbeddedDocument):
+    name = field.Char()
+    value = field.Char()
+
 class Car(orm.Document):
     _db = "test"
     _collection = "cars"
@@ -49,6 +53,9 @@ class Car(orm.Document):
     make = field.Char()
     model = field.Char()
     year = field.Date()
+    features = orm.List(type=unicode)
+    properties = orm.List(type=Property)
+
 
 class CarDisplay(orm.Widget):
     #ideally you're using some sort of templating engine, I prefer Mako.

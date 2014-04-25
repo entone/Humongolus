@@ -353,6 +353,7 @@ class Document(unittest.TestCase):
         }
     
 
+        
     def test_dbkey(self):
         obj = objects.BadHuman()
         obj.name = "Anne"
@@ -531,6 +532,79 @@ class Lazy(unittest.TestCase):
         self.obj.__class__.__remove__()
         objects.Car.__remove__()
 
+class SavingLoading(unittest.TestCase):
+
+    def setUp(self):
+        self.car = objects.Car()
+        self.car.make = "Saab"
+        self.car.model = "900"
+        self.car.year = datetime.datetime(2007, 1, 1)
+
+    def test_list_strings_0(self):
+        self.car.features._map([u'CD-Player', u'Power Windows', u'Remote Start'])        
+        self.car.features.append(u"Test")
+        try:
+            self.car.save()
+        except Exception as e:
+            print e
+
+        car = objects.Car(id=self.car._id)
+        self.assertEqual(len(car.features), len(self.car.features))
+
+    def test_list_strings_1(self):
+        self.car.features.append(u'Test')
+        self.car.features.append(u'AnotherTest')
+        self.car.save()
+
+        car = objects.Car(id=self.car._id)
+        self.assertEqual(len(car.features), len(self.car.features))
+
+        self.car.features.append(u'Yet again another')
+        self.car.save()
+
+        car = objects.Car(id=self.car._id)
+        self.assertEqual(len(car.features), len(self.car.features))
+
+        self.car.features.delete('features', 1)
+        self.car.save()
+
+        car = objects.Car(id=self.car._id)
+        self.assertEqual(len(car.features), len(self.car.features))
+
+
+    def test_lists_of_type(self):
+        p0 = objects.Property()
+        p0.name = "Type"
+        p0.value = "Lumber"
+
+        p1= objects.Property()
+        p1.name = "Type"
+        p1.value = "Camping gear"
+
+        p2= objects.Property()
+        p2.name = "Type"
+        p2.value = "Sledgehammer"
+
+        self.car.properties.append(p0)
+        self.car.save()
+
+        car = objects.Car.find_one(id=self.car._id)
+        self.assertEqual(len(car.properties), len(self.car.properties))
+
+        self.car.properties.append(p1)
+        self.car.save()
+        car = objects.Car.find_one(id=self.car._id)
+        self.assertEqual(len(car.properties), len(self.car.properties))
+
+        self.car.properties.delete('properties', 1)
+        self.car.save()
+        car = objects.Car(id=self.car._id)
+        self.assertEqual(len(car.properties), len(self.car.properties))
+        
+    def tearDown(self):
+        self.car.__class__.__remove__()
+
+
 class Widget(unittest.TestCase):
 
     def setUp(self):
@@ -546,6 +620,7 @@ class Widget(unittest.TestCase):
                     <li>Year: 2007-01-01 00:00:00</li>
                 </ul>"""
     
+
 
     def test_render(self):
         anne = objects.Female()
