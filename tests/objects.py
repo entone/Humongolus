@@ -53,7 +53,7 @@ class Car(orm.Document):
     make = field.Char()
     model = field.Char()
     year = field.Date()
-    features = orm.List(type=field.Char())
+    features = orm.List(type=unicode)
     properties = orm.List(type=Property)
 
 

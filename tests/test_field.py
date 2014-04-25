@@ -541,29 +541,31 @@ class SavingLoading(unittest.TestCase):
         self.car.year = datetime.datetime(2007, 1, 1)
 
     def test_list_strings_0(self):
-        self.car.features = ['CD-Player', 'Power Windows', 'Remote Start']
-        self.car.features.append( "Test")
-        self.car.save()
+        self.car.features._map([u'CD-Player', u'Power Windows', u'Remote Start'])        
+        self.car.features.append(u"Test")
+        try:
+            self.car.save()
+        except Exception as e:
+            print e
 
-        car = objects.Car.find_one(id=self.car._id)
+        car = objects.Car(id=self.car._id)
         self.assertEqual(len(car.features), len(self.car.features))
 
     def test_list_strings_1(self):
-        self.car.features = []
-        self.car.features.append('Test')
-        self.car.features.append('AnotherTest')
+        self.car.features.append(u'Test')
+        self.car.features.append(u'AnotherTest')
         self.car.save()
 
         car = objects.Car(id=self.car._id)
         self.assertEqual(len(car.features), len(self.car.features))
 
-        self.car.features.append('Yet again another')
+        self.car.features.append(u'Yet again another')
         self.car.save()
 
         car = objects.Car(id=self.car._id)
         self.assertEqual(len(car.features), len(self.car.features))
 
-        del self.car.features[1]
+        self.car.features.delete('features', 1)
         self.car.save()
 
         car = objects.Car(id=self.car._id)
@@ -594,8 +596,9 @@ class SavingLoading(unittest.TestCase):
         car = objects.Car.find_one(id=self.car._id)
         self.assertEqual(len(car.properties), len(self.car.properties))
 
-        del self.car.properties[1]
+        self.car.properties.delete('properties', 1)
         self.car.save()
+        car = objects.Car(id=self.car._id)
         self.assertEqual(len(car.properties), len(self.car.properties))
         
     def tearDown(self):
