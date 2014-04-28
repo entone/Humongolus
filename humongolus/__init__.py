@@ -418,6 +418,7 @@ class List(list):
         self.logger = _settings.LOGGER
         self.__kwargs__ = kwargs
         self.__args__ = args
+        self._inited = False
         for k,v in kwargs.iteritems():
             try:
                 setattr(self, "_"+k, v)
@@ -434,6 +435,7 @@ class List(list):
     def _save(self, namespace):
         ret = {}
         if len(self) == 0: return {namespace:[]}
+        if not self._inited: return {namespace:self._json()}
         for id, obj in enumerate(self):
             ns = ".".join([namespace, str(id)])
             try:
@@ -460,6 +462,7 @@ class List(list):
            
     def _map(self, val, init=False, doc=None):
         for item in val:
+            self._inited = True
             try:
                 obj = self._type()
                 try:
