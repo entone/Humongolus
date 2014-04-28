@@ -571,7 +571,6 @@ class SavingLoading(unittest.TestCase):
         car = objects.Car(id=self.car._id)
         self.assertEqual(len(car.features), len(self.car.features))
 
-
     def test_lists_of_type(self):
         p0 = objects.Property()
         p0.name = "Type"
@@ -600,7 +599,34 @@ class SavingLoading(unittest.TestCase):
         self.car.save()
         car = objects.Car(id=self.car._id)
         self.assertEqual(len(car.properties), len(self.car.properties))
-        
+
+    def test_add_new_field(self):
+        self.car.save()
+
+        class Hybrid(objects.Car):
+            fuels = orm.List(type=objects.Property)
+
+        hybrid_car = Hybrid(id=self.car._id)
+        # This test will work if you call save upon loading (if new field was added)
+        # Otherwise it will write the object as {'0': {'name': 'Ethanol', value: 'E85'}, '1': {.......}}
+        #hybrid_car.save()
+
+        p0 = objects.Property()
+        p0.name = "Ethanol"
+        p0.value = "E85"
+        hybrid_car.fuels.append(p0)
+
+        p1 = objects.Property()
+        p1.name = "Battery"
+        p1.value = "240 Volts"
+        hybrid_car.fuels.append(p1)
+
+        hybrid_car.save()
+
+        loaded_hybrid = Hybrid(id=self.car._id)
+        self.assertEqual(loaded_hybrid.fuels[0].name, hybrid_car.fuels[0].name)
+        self.assertEqual(loaded_hybrid.fuels[0].value, hybrid_car.fuels[0].value)
+
     def tearDown(self):
         self.car.__class__.__remove__()
 
