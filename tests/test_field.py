@@ -28,13 +28,13 @@ class Field(unittest.TestCase):
         self.job = objects.Job()
         self.loca = objects.LocationGeo()
         self.location = objects.Location()
-    
+
     def test_validation(self):
         obj = objects.BadHuman()
         obj.state = "Illinois"
         with self.assertRaises(orm.DocumentException) as cm:
             obj.save()
-        
+
         obj.country = "USA"
         obj.state = "Illinois"
 
@@ -44,12 +44,12 @@ class Field(unittest.TestCase):
     def test_field_set(self):
         self.obj.name = self.name
         self.assertEqual(self.obj.name, self.name)
-    
+
     def test_required(self):
         self.obj.name = None
         with self.assertRaises(orm.DocumentException) as cm:
             self.obj.save()
-    
+
     def test_embedded_required(self):
         self.obj.name = ""
         job = self.job
@@ -61,7 +61,7 @@ class Field(unittest.TestCase):
         self.obj.name = self.name
         with self.assertRaises(orm.DocumentException) as cm:
             self.obj.save()
-    
+
     def test_char(self):
         self.obj.name = "Anne"
         self.assertEqual(self.obj.name, "Anne")
@@ -70,7 +70,7 @@ class Field(unittest.TestCase):
         self.assertEqual(self.obj._get("name")._error.__class__.__name__, "MinException")
 
         self.obj.name = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
-        self.assertEqual(self.obj._get("name")._error.__class__.__name__, "MaxException")        
+        self.assertEqual(self.obj._get("name")._error.__class__.__name__, "MaxException")
 
     def test_integer(self):
 
@@ -82,7 +82,7 @@ class Field(unittest.TestCase):
 
         self.obj.age = 3001
         self.assertEqual(self.obj._get("age")._error.__class__.__name__, "MaxException")
-    
+
     def test_float(self):
 
         self.obj.height = 100
@@ -111,7 +111,7 @@ class Field(unittest.TestCase):
         n_obj = objects.Female(id=_id)
         self.assertEqual(n_obj.human_id, new_val)
         self.assertEqual(n_obj.name, n)
-    
+
     def test_dynamic_document(self):
         self.obj.name = self.name
         _id = self.obj.save()
@@ -126,17 +126,17 @@ class Field(unittest.TestCase):
         with self.assertRaises(orm.DocumentException) as cm:
             car3.save()
             print cm.exception.errors
-        
+
         with self.assertRaises(Exception) as cm:
             car3._get("any_owner")()
 
-    
+
     def compare_date(self, date1, date2):
         #mongo doesn't support the same date precision as python, gotta chop off a few microseconds
         diff = date1-date2
         self.assertLess(diff.microseconds, 1000)
 
-    def test_timestamp(self): 
+    def test_timestamp(self):
         obj = objects.Scion()
         _id = obj.save()
         timestamp = obj.silly_date
@@ -150,7 +150,7 @@ class Field(unittest.TestCase):
         _id = obj.save()
         obj2 = objects.Scion(id=_id)
         self.compare_date(now, obj2.year)
-    
+
     def test_choice(self):
         car = objects.Scion()
         car.color = "Red"
@@ -208,10 +208,10 @@ class Field(unittest.TestCase):
 
         loc.active = True
         self.assertEqual(loc.active, True)
-        
+
         loc.active = False
-        self.assertEqual(loc.active, False)        
-    
+        self.assertEqual(loc.active, False)
+
     def test_phone(self):
         obj = objects.BadHuman()
         print obj._get("phone")
@@ -280,7 +280,7 @@ class Find(unittest.TestCase):
             obj.jobs.append(j)
             obj.save()
             self.ids.append(obj._id)
-    
+
     def test_find(self):
         ids = []
         print self.ids
@@ -289,9 +289,9 @@ class Find(unittest.TestCase):
             print obj.created
             print obj.json()
             ids.append(obj._id)
-                
+
         self.assertEqual(ids, self.ids)
-    
+
     def test_fields(self):
         for obj in objects.Female.find(as_dict=True, fields={"genitalia":True}):
             self.assertEqual(obj.get('name', None), None)
@@ -299,13 +299,13 @@ class Find(unittest.TestCase):
 
         obj = objects.Female.find_one({"_id":self.ids[0]}, as_dict=True, fields={"genitalia":True})
         self.assertEqual(obj.get("genitalia", None), self.genitalia)
-    
+
     def test_update(self):
         obj = objects.Female(id=self.ids[0])
         obj.update({"$set":{"name":"Woop"}})
         obj2 = objects.Female(id=self.ids[0])
         self.assertEqual(obj2.name, "Woop")
-    
+
     def test_remove(self):
         obj = objects.Female(id=self.ids[0])
         obj.remove()
@@ -325,7 +325,7 @@ class Document(unittest.TestCase):
         self.loc = objects.Location()
         self.loc.city = "Portland"
         self.loc.state = "OR"
-        
+
         self.obj = objects.Female()
         self.obj.name = "Anne"
         self.obj.age = 27
@@ -333,27 +333,27 @@ class Document(unittest.TestCase):
         self.obj.weight = 120
 
         self.person = {
-            "name":u"Anne", 
-            "age":27, 
-            "height":65.0, 
+            "name":u"Anne",
+            "age":27,
+            "height":65.0,
             "weight":120.0,
-            "genitalia":u"inny", 
+            "genitalia":u"inny",
             "jobs":[
                 {
-                    "employer":u"Nike", 
-                    "title":u"Designer", 
+                    "employer":u"Nike",
+                    "title":u"Designer",
                     "locations":[
                         {
-                            "city":u"Portland", 
+                            "city":u"Portland",
                             "state":u"OR"
                         }
                     ]
                 }
             ]
         }
-    
 
-        
+
+
     def test_dbkey(self):
         obj = objects.BadHuman()
         obj.name = "Anne"
@@ -378,6 +378,19 @@ class Document(unittest.TestCase):
         print orm.Widget(object=self.obj._get("name"), name="name").render()
         print unicode(self.obj.cars)
 
+    def test_data_init(self):
+        car = objects.Car(data={
+            "make":"VW",
+            "model":"Jetta",
+            "year":datetime.datetime.utcnow(),
+            "features": [u"leather", u"manual"],
+        }, init=False)
+        print "Data init: {}".format(car.json())
+        print "Data init: {}".format(car.save())
+        car2 = objects.Car(id=car._id)
+        self.assertEqual(car.model, car2.model)
+
+
     def test_json(self):
         self.job.locations.append(self.loc)
         self.obj.jobs.append(self.job)
@@ -387,7 +400,7 @@ class Document(unittest.TestCase):
         _id = self.obj.save()
         o = self.obj.json()
         self.assertEqual(_id, o['_id'])
-    
+
     def test_map(self):
         anne = objects.Female()
         anne._map(self.person)
@@ -414,13 +427,13 @@ class Document(unittest.TestCase):
         j = obj3._json()
         del j["human_id"]
         self.assertEqual(j, self.person)
-    
+
     def test_bad_rel_type(self):
         with self.assertRaises(Exception) as cm:
             self.obj.jobs.append(objects.Location())
 
         print cm.exception
-    
+
     def test_list_length(self):
         with self.assertRaises(Exception) as cm:
             for i in xrange(5):
@@ -439,11 +452,11 @@ class Document(unittest.TestCase):
         p2.jobs.delete('jobs', 0)
         p3 = objects.Female(id=id)
         self.assertEqual(len(p3.jobs), 0)
-    
+
     def test_bad_get(self):
         with self.assertRaises(AttributeError):
             self.obj._get("hoohaa")
-    
+
     def test_bad_attr(self):
         with self.assertRaises(AttributeError):
             self.obj.hoohaa
@@ -458,18 +471,18 @@ class Document(unittest.TestCase):
         _id = car.save()
         car2 = objects.Rodeo(id=_id)
         self.assertEqual(car2.tires, [1,2,3,4])
-    
+
     def test_mongo_exception(self):
         obj = objects.BadHuman()
         obj._coll.ensure_index("name", unique=True)
         obj.name = "Test"
         obj.save()
-        
+
         obj2 = objects.BadHuman()
         obj2.name = "Test"
         with self.assertRaises(Exception) as cm:
             _id = obj2.save()
-        
+
         obj.__class__.__remove__()
         obj3 = objects.BadHuman()
         obj3.name = "Test"
@@ -481,14 +494,14 @@ class Document(unittest.TestCase):
         obj4.name = "Test"
         with self.assertRaises(Exception) as cm:
             _id2 = obj4.save()
-        
+
         obj._coll.drop_indexes()
-        
+
 
     def test_created(self):
         self.obj.save()
         print self.obj.created
-        self.assertEqual(self.obj.created.__class__, datetime.datetime) 
+        self.assertEqual(self.obj.created.__class__, datetime.datetime)
 
     def test_modified(self):
         self.obj.save()
@@ -525,7 +538,7 @@ class Lazy(unittest.TestCase):
         ids = []
         for c in human.cars().sort('_id'):
             ids.append(c._id)
-        
+
         self.assertEqual(self.car_ids, ids)
 
     def tearDown(self):
@@ -541,7 +554,7 @@ class SavingLoading(unittest.TestCase):
         self.car.year = datetime.datetime(2007, 1, 1)
 
     def test_list_strings_0(self):
-        self.car.features._map([u'CD-Player', u'Power Windows', u'Remote Start'])        
+        self.car.features._map([u'CD-Player', u'Power Windows', u'Remote Start'])
         self.car.features.append(u"Test")
         try:
             self.car.save()
@@ -645,7 +658,7 @@ class Widget(unittest.TestCase):
                     <li>Model: Rodeo</li>
                     <li>Year: 2007-01-01 00:00:00</li>
                 </ul>"""
-    
+
 
 
     def test_render(self):
@@ -666,7 +679,7 @@ class Widget(unittest.TestCase):
     def test_input_render(self):
         text = widget.Input(object=self.car._get("make"), name="make").render(cls="red checked")
         self.assertEqual(text.strip(), self.text_html.strip())
-    
+
     def test_choice_render(self):
         _id = self.car.save()
         select = self.choice_html % str(_id)
@@ -706,13 +719,13 @@ class Form(unittest.TestCase):
             "location-city":"Chicago",
             "location-state":"IL"
         }
-    
+
     def test_form(self):
         form = objects.PersonForm(object=self.obj, data=self.submit)
         form.render()
         with self.assertRaises(orm.DocumentException) as e:
             form.validate()
-    
+
     def test_iterator(self):
         form = objects.PersonForm(obj=self.obj, data=self.submit)
         for f in form:
