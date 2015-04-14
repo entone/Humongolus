@@ -10,7 +10,7 @@ setup(name='Humongolus',
       author='Christopher Coté',
       packages=find_packages(),
       zip_safe=False,
-      install_requires=['pymongo'],
+      install_requires=['pymongo==2.8'],
       include_package_data=True,
       )
 
