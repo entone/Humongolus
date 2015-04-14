@@ -6,7 +6,7 @@ from distutils.core import setup
 from setuptools import find_packages
 
 setup(name='Humongolus',
-      version='1.0.5',
+      version='1.0.6',
       author='Christopher Coté',
       packages=find_packages(),
       zip_safe=False,
