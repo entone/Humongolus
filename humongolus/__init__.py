@@ -262,6 +262,8 @@ class Field(object):
         self._error = None
 
     def __get__(self, instance, owner):
+        if not instance:
+            return self.__class__
         me = instance.__dict__.get(self._name)
         if me:
             if callable(me): return me()
