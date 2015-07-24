@@ -10,6 +10,7 @@ from pymongo.connection import Connection
 import logging
 import humongolus as orm
 import humongolus.widget as widget
+import humongolus.field as field
 from humongolus.field import FieldException
 
 conn = Connection()
@@ -262,6 +263,14 @@ class Field(unittest.TestCase):
         with self.assertRaises(orm.DocumentException) as cm:
             obj2.save()
             print cm.exception.errors
+
+    def test_class_attr(self):
+        self.assertEqual(self.obj.__class__.name, field.Char)
+        self.assertEqual(self.obj.__class__.human_id, field.AutoIncrement)
+        self.assertEqual(self.obj.__class__.age, field.Integer)
+        self.assertEqual(self.obj.__class__.height, field.Float)
+        self.assertEqual(self.obj.__class__.weight, field.Float)
+        self.assertEqual(self.obj.__class__.genitalia, field.Char)
 
 
     def tearDown(self):
