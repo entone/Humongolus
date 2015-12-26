@@ -51,13 +51,13 @@ Google Group: http://groups.google.com/group/humongolus
 
 ```python
 
-from pymongo.connection import Connection
+from pymongo.mongo_client import MongoClient
 import logging
 import humongolus as orm
 import datetime
 import humongolus.field as field
 
-conn = Connection()
+conn = MongoClient()
 FORMAT = '%(asctime)-15s %(message)s'
 logging.basicConfig(format=FORMAT)
 logger = logging.getLogger("humongolus")
