@@ -6,13 +6,13 @@ else:
 import datetime
 import objects
 import os
-from pymongo.connection import Connection
+from pymongo.mongo_client import MongoClient
 import logging
 import humongolus as orm
 import humongolus.widget as widget
 from humongolus.field import FieldException
 
-conn = Connection()
+conn = MongoClient()
 FORMAT = '%(asctime)-15s %(message)s'
 logging.basicConfig(format=FORMAT, level=logging.DEBUG)
 logger = logging.getLogger("humongolus")
