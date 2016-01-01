@@ -36,8 +36,8 @@ class Char(Field):
     def clean(self, val, doc=None):
         try:            
             val = self._type(val)
-            if self._max != None and len(val) > self._max: raise MaxException("must be less than %s" % self._max)
-            if self._min != None and len(val) < self._min: raise MinException("must be greater than %s" % self._min)
+            if self._max is not None and len(val) > self._max: raise MaxException("must be less than %s" % self._max)
+            if self._min is not None and len(val) < self._min: raise MinException("must be greater than %s" % self._min)
             return val
         except FieldException as e: raise e
         except: raise FieldException("%s is not a valid %s" % (val, self._exception_display))
@@ -50,8 +50,8 @@ class Integer(Char):
         try:
             if val not in [None, False]:
                 val = self._type(val)
-                if self._max != None and val > self._max: raise MaxException("must be less than %s" % self._max)
-                if self._min != None and val < self._min: raise MinException("must be greater than %s" % self._min)
+                if self._max is not None and val > self._max: raise MaxException("must be less than %s" % self._max)
+                if self._min is not None and val < self._min: raise MinException("must be greater than %s" % self._min)
             return val
         except FieldException as e: raise e
         except: raise FieldException("%s is not a valid %s" % (val, self._exception_display))
@@ -120,7 +120,7 @@ class AutoIncrement(Integer):
     _collection = None
 
     def _save(self, namespace):
-        if self._value == None:
+        if self._value is None:
             col = self._collection if self._collection else "sequence"
             res = self._conn["auto_increment"][col].find_and_modify({"field":self._name}, {"$inc":{"val":1}}, upsert=True, new=True, fields={"val":True})
             self._value = res['val']
@@ -131,7 +131,7 @@ class DynamicDocument(Field):
 
     def clean(self, val, doc=None):
         if isinstance(val, Document):
-            if val._id != None:
+            if val._id is not None:
                 cls = "%s.%s" % (val.__module__, val.__class__.__name__)
                 return {"cls":cls, "id":val._id}
             else: raise FieldException("Document does not have an id. Be sure to save first.")
