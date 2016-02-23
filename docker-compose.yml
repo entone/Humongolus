@@ -1,0 +1,5 @@
+mongodb:
+    image: mongo:2.6
+    hostname: mongodb
+    ports:
+        - "27017:27017"
