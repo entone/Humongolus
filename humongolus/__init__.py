@@ -338,8 +338,6 @@ class Field(object):
     def __str__(self):
         return str(self._value)
 
-    def __unicode__(self):
-        return unicode(self._value)
 
 class Lazy(object):
     """Object for describing a "foreign key" relationship across Models"""
@@ -395,8 +393,6 @@ class Lazy(object):
     def __str__(self):
         return str(self.__class__.__name__)
 
-    def __unicode__(self):
-        return unicode(self.__class__.__name__)
 
 class List(list):
     """Used to describe an array in a :class: `~Document` or :class: `~EmbeddedDocument`. Extends list."""
@@ -499,8 +495,6 @@ class List(list):
     def __str__(self):
         return str(self.__class__.__name__)
 
-    def __unicode__(self):
-        return unicode(self.__class__.__name__)
 
 class base(dict):
     logger = None
@@ -525,7 +519,7 @@ class base(dict):
                 for k,v in c.__dict__.items():
                     if isinstance(v, (base, Field, List, Lazy)):
                         key = v._dbkey if v._dbkey else k
-                        if not isinstance(v, Lazy): cls.__keys__.add(unicode(key))
+                        if not isinstance(v, Lazy): cls.__keys__.add(str(key))
                         v._name = k
                         cls._fields[k] = v
 
@@ -613,8 +607,6 @@ class base(dict):
     def __str__(self):
         return str(self.__class__.__name__)
 
-    def __unicode__(self):
-        return unicode(self.__class__.__name__)
 
 class EmbeddedDocument(base):
     """Base class for all emdedded documents
