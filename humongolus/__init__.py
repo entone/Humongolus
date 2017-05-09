@@ -16,7 +16,7 @@
 Humongolus is a Persistence and Widget Framework for MongoDB written in Python
 """
 
-import settings as _settings
+from . import settings as _settings
 import mongo
 import datetime
 import pymongo
