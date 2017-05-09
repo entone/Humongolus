@@ -134,7 +134,7 @@ class Attributes(object):
             try:
                 setattr(self, k, v)
             except Exception as e:
-                print e
+                print(e)
 
     @property
     def name(self):
