@@ -30,7 +30,7 @@ def parse_phone(number):
 class Char(Field):
     _max=None
     _min=None
-    _type = unicode
+    _type = str
     _exception_display = "string"
 
     def clean(self, val, doc=None):
