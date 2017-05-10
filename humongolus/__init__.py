@@ -695,8 +695,8 @@ class Document(base):
     @classmethod
     def _connection(cls):
         _conn = _settings.DB_CONNECTION
-        if settings.collection_class:
-            _coll = settings.collection_class(database=_conn[cls._db], name=cls._collection)
+        if _settings.collection_class:
+            _coll = _settings.collection_class(database=_conn[cls._db], name=cls._collection)
         else:
             _coll = mongo.Collection(cls, database=_conn[cls._db], name=cls._collection)
         return _coll
