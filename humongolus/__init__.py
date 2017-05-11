@@ -793,13 +793,13 @@ class Document(base):
             obj['__created__'] = self.__created__
             obj['__modified__']= self.__modified__
             obj['__active__'] = self.__active__
-            self._id = self._coll.insert(obj, safe=True)
+            self._id = self._coll.insert_one(obj)
         else:
             obj = self._save()
             self.__modified__ = datetime.datetime.utcnow()
             obj['__modified__'] = self.__modified__
             up = {'$set':obj}
-            self._coll.update({'_id':self._id}, up, safe=True)
+            self._coll.update_one({'_id':self._id}, up)
         return self._id
 
 class Index(object):
