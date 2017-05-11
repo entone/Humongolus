@@ -793,7 +793,7 @@ class Document(base):
             obj['__created__'] = self.__created__
             obj['__modified__']= self.__modified__
             obj['__active__'] = self.__active__
-            self._id = self._coll.insert_one(obj)
+            self._id = self._coll.insert_one(obj).inserted_id
         else:
             obj = self._save()
             self.__modified__ = datetime.datetime.utcnow()
