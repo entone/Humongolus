@@ -29,9 +29,9 @@ class AppHandler(tornado.web.RequestHandler):
         context = {"success":False, "data":None, "html":None}
         try:
             submit = json.loads(self.get_argument("form", "{}"))
-            print submit
+            print(submit)
         except Exception as e:
-            print e
+            print(e)
         else:
             obj = objects.BadHuman()
             form = objects.SimpleForm(object=obj, action="/", id="test", data=submit)
@@ -43,12 +43,12 @@ class AppHandler(tornado.web.RequestHandler):
             except orm.DocumentException as e:
                 context['success'] = False
                 obj = {}
-                for k,v in e.errors.iteritems():
+                for k,v in e.errors.items():
                     obj[k] = v.message
                 context['data'] = obj
             finally:
                 context['html'] = self.render_string("form.html", form=form)
-                print context
+                print(context)
                 self.finish(json.dumps(context))
 
 ROOT = os.path.abspath(os.path.dirname(__file__))+"/"

@@ -96,18 +96,18 @@ loc.state = "IL"
 job.locations.append(loc)
 chris.jobs.append(job)
 
-print chris._json()
+print(chris._json())
 
 _id = chris.save()
 
-print _id
+print(_id)
 
 car = Car()
 car.owner = chris
 car.make = "Isuzu"
 car.model = "Rodeo"
 car.year = datetime.datetime(1998, 1, 1)
-print car
+print(car)
 c_id = car.save()
 
 car2 = Car()
@@ -115,10 +115,10 @@ car2.owner = chris
 car2.make = "Mercedes"
 car2.model = "Baby C"
 car2.year = datetime.datetime(1965, 1, 1)
-print car2
+print(car2)
 c_id = car2.save()
 
-print car._get("owner")().name
+print(car._get("owner")().name)
 
 
 def car_disp(car):
@@ -176,9 +176,9 @@ submit = {
     #"location-address-zip":"60626"
 }
 
-print states
+print(states)
 conn['test']['states'].remove()
-for k,v in states.iteritems():
+for k,v in states.items():
     conn['test']['states'].insert({"abbrv":k, 'fullname':v})
     
 
@@ -188,33 +188,33 @@ class SelectorForm(widget.Form):
     color = widget.Select(label="Color")
     state = widget.Select(label="State", item_render=coll_display)
 
-print "SELECTS:"
+print("SELECTS:")
 
 a = SelectorForm(object=chris)
-print a.render()
+print(a.render())
 
 form = PersonForm(object=chris, data=submit)
 
-print form.car.render(cls="try-this")
+print(form.car.render(cls="try-this"))
 
-print form.render()
+print(form.render())
 
 try:
     form.validate()
-    print "Validated"
+    print("Validated")
 except orm.DocumentException as e:
-    print e
+    print(e)
     for f in form:
         if f.errors:
-            print f.attributes.name
-            if f.attributes.description: print f.attributes.description
-            print f.errors
+            print(f.attributes.name)
+            if f.attributes.description: print(f.attributes.description)
+            print(f.errors)
     
-    print form.errors
-    print e.errors
+    print(form.errors)
+    print(e.errors)
 except Exception as e:
-    print e
+    print(e)
 
 form2 = PersonForm(object=Human(), prepend=None)
 
-print form2.render()
+print(form2.render())

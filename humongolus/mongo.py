@@ -14,8 +14,8 @@ class Cursor(cursor.Cursor):
         if isinstance(obj, dict): return self._class(data=obj)
         return obj
 
-    def next(self, *args, **kwargs):
-        obj = super(Cursor, self).next(*args, **kwargs)
+    def __next__(self, *args, **kwargs):
+        obj = super(Cursor, self).__next__(*args, **kwargs)
         if self._as_dict: return obj
         return self._class(data=obj)
 

@@ -30,7 +30,7 @@ def parse_phone(number):
 class Char(Field):
     _max=None
     _min=None
-    _type = unicode
+    _type = str
     _exception_display = "string"
 
     def clean(self, val, doc=None):
@@ -224,7 +224,7 @@ class File(DocumentId):
             self._args["filename"] = self._args.get("filename", self._name)
             return f.put(val, **self._args)
         except Exception as e:
-            raise FieldException(e.message)
+            raise FieldException(str(e))
 
     def exists(self):
         f = GridFS(self._database, collection=self._collection)

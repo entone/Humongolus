@@ -1,10 +1,7 @@
 import sys
-if sys.version_info < (2,7):
-    import unittest2 as unittest
-else:
-    import unittest
+import unittest
 import datetime
-import objects
+from . import objects
 import os
 from pymongo.mongo_client import MongoClient
 import logging
@@ -108,7 +105,7 @@ class Field(unittest.TestCase):
         try:
             obj.save()
         except Exception as e:
-            print e
+            print(e)
         n_obj = objects.Female(id=_id)
         self.assertEqual(n_obj.human_id, new_val)
         self.assertEqual(n_obj.name, n)
@@ -126,7 +123,7 @@ class Field(unittest.TestCase):
         car3.any_owner = objects.Female()
         with self.assertRaises(orm.DocumentException) as cm:
             car3.save()
-            print cm.exception.errors
+            print(cm.exception.errors)
 
         with self.assertRaises(Exception) as cm:
             car3._get("any_owner")()
@@ -180,7 +177,7 @@ class Field(unittest.TestCase):
         car3.owner = objects.Female()
         with self.assertRaises(orm.DocumentException) as cm:
             car3.save()
-            print cm.exception.errors
+            print(cm.exception.errors)
 
     def test_geo(self):
         loc = objects.LocationGeo()
@@ -197,7 +194,7 @@ class Field(unittest.TestCase):
 
     def test_boolean(self):
         loc = objects.LocationGeo()
-        print loc.__class__
+        print(loc.__class__)
         loc.city = "Chicago"
         loc.state = "IL"
         loc.geo = [48.326, -81.656565]
@@ -215,17 +212,17 @@ class Field(unittest.TestCase):
 
     def test_phone(self):
         obj = objects.BadHuman()
-        print obj._get("phone")
+        print(obj._get("phone"))
         obj.name = "Anne"
         obj.phone = "sjkdhfkjshdfksjhdf"
-        print obj._get("phone")
+        print(obj._get("phone"))
         self.assertEqual(obj._get("phone")._error.__class__.__name__, "FieldException")
 
         obj.phone = "810-542.0141"
-        self.assertEqual(obj.phone, u"+18105420141")
+        self.assertEqual(obj.phone, "+18105420141")
 
         obj.phone = "1-810-542.0141"
-        self.assertEqual(obj.phone, u"+18105420141")
+        self.assertEqual(obj.phone, "+18105420141")
 
     def test_email(self):
         obj = objects.BadHuman()
@@ -243,16 +240,16 @@ class Field(unittest.TestCase):
         obj = objects.BadHuman()
         obj.name = "Anne"
         path = os.path.dirname(__file__)
-        print path
-        obj.avatar = file("%s/%s" % (path, "penguin.jpg"))
-        f_id = obj.avatar
+        print(path)
+        obj.avatar = open("%s/%s" % (path, "penguin.jpg"), "rb")
+        f_id = obj.avatar._id
         self.assertEqual(obj._get("avatar").exists(), True)
         _id = obj.save()
         o = objects.BadHuman(id=_id)
-        self.assertEqual(o.avatar, f_id)
-        print o._get("avatar")()
-        print o._get("avatar").list()
-        print o._get("avatar").delete()
+        self.assertEqual(o.avatar._id, f_id)
+        print(o._get("avatar")())
+        print(o._get("avatar").list())
+        print(o._get("avatar").delete())
         self.assertEqual(obj._get("avatar").exists(), False)
         obj2 = objects.BadHuman()
         with self.assertRaises(FieldException) as cm:
@@ -262,7 +259,7 @@ class Field(unittest.TestCase):
         obj2.avatar = objects.BadHuman()
         with self.assertRaises(orm.DocumentException) as cm:
             obj2.save()
-            print cm.exception.errors
+            print(cm.exception.errors)
 
     def test_class_attr(self):
         self.assertEqual(self.obj.__class__.name, field.Char)
@@ -281,7 +278,7 @@ class Find(unittest.TestCase):
     def setUp(self):
         self.ids = []
         self.genitalia = "inny"
-        for i in xrange(5):
+        for i in range(5):
             obj = objects.Female()
             obj.name = "Anne%s" % i
             j = objects.Job()
@@ -292,11 +289,11 @@ class Find(unittest.TestCase):
 
     def test_find(self):
         ids = []
-        print self.ids
+        print(self.ids)
         for obj in objects.Female.find().sort('_id'):
-            print obj.jobs[0]
-            print obj.created
-            print obj.json()
+            print(obj.jobs[0])
+            print(obj.created)
+            print(obj.json())
             ids.append(obj._id)
 
         self.assertEqual(ids, self.ids)
@@ -342,19 +339,19 @@ class Document(unittest.TestCase):
         self.obj.weight = 120
 
         self.person = {
-            "name":u"Anne",
+            "name":"Anne",
             "age":27,
             "height":65.0,
             "weight":120.0,
-            "genitalia":u"inny",
+            "genitalia":"inny",
             "jobs":[
                 {
-                    "employer":u"Nike",
-                    "title":u"Designer",
+                    "employer":"Nike",
+                    "title":"Designer",
                     "locations":[
                         {
-                            "city":u"Portland",
-                            "state":u"OR"
+                            "city":"Portland",
+                            "state":"OR"
                         }
                     ]
                 }
@@ -377,25 +374,25 @@ class Document(unittest.TestCase):
             obj.save()
 
     def test_repr(self):
-        print unicode(self.obj)
-        print self.obj
-        print self.obj.jobs
-        print unicode(self.obj.jobs)
-        print self.obj.name
-        print unicode(self.obj.name)
-        print unicode(self.obj._get("name"))
-        print orm.Widget(object=self.obj._get("name"), name="name").render()
-        print unicode(self.obj.cars)
+        print(str(self.obj))
+        print(self.obj)
+        print(self.obj.jobs)
+        print(str(self.obj.jobs))
+        print(self.obj.name)
+        print(str(self.obj.name))
+        print(str(self.obj._get("name")))
+        print(orm.Widget(object=self.obj._get("name"), name="name").render())
+        print(str(self.obj.cars))
 
     def test_data_init(self):
         car = objects.Car(data={
             "make":"VW",
             "model":"Jetta",
             "year":datetime.datetime.utcnow(),
-            "features": [u"leather", u"manual"],
+            "features": ["leather", "manual"],
         }, init=False)
-        print "Data init: {}".format(car.json())
-        print "Data init: {}".format(car.save())
+        print("Data init: {}".format(car.json()))
+        print("Data init: {}".format(car.save()))
         car2 = objects.Car(id=car._id)
         self.assertEqual(car.model, car2.model)
 
@@ -441,11 +438,11 @@ class Document(unittest.TestCase):
         with self.assertRaises(Exception) as cm:
             self.obj.jobs.append(objects.Location())
 
-        print cm.exception
+        print(cm.exception)
 
     def test_list_length(self):
         with self.assertRaises(Exception) as cm:
-            for i in xrange(5):
+            for i in range(5):
                 job = objects.Job()
                 job.title = "Engineer %s" % i
                 self.obj.jobs.append(job)
@@ -509,12 +506,12 @@ class Document(unittest.TestCase):
 
     def test_created(self):
         self.obj.save()
-        print self.obj.created
+        print(self.obj.created)
         self.assertEqual(self.obj.created.__class__, datetime.datetime)
 
     def test_modified(self):
         self.obj.save()
-        print self.obj.modified
+        print(self.obj.modified)
         self.assertEqual(self.obj.modified.__class__, datetime.datetime)
 
     def test_active(self):
@@ -534,7 +531,7 @@ class Lazy(unittest.TestCase):
         self.obj.weight = 120
         self.human_id = self.obj.save()
         self.car_ids = []
-        for i in xrange(3):
+        for i in range(3):
             car = objects.Car()
             car.owner = self.human_id
             car.make = "Toyota"
@@ -563,25 +560,25 @@ class SavingLoading(unittest.TestCase):
         self.car.year = datetime.datetime(2007, 1, 1)
 
     def test_list_strings_0(self):
-        self.car.features._map([u'CD-Player', u'Power Windows', u'Remote Start'])
-        self.car.features.append(u"Test")
+        self.car.features._map(['CD-Player', 'Power Windows', 'Remote Start'])
+        self.car.features.append("Test")
         try:
             self.car.save()
         except Exception as e:
-            print e
+            print(e)
 
         car = objects.Car(id=self.car._id)
         self.assertEqual(len(car.features), len(self.car.features))
 
     def test_list_strings_1(self):
-        self.car.features.append(u'Test')
-        self.car.features.append(u'AnotherTest')
+        self.car.features.append('Test')
+        self.car.features.append('AnotherTest')
         self.car.save()
 
         car = objects.Car(id=self.car._id)
         self.assertEqual(len(car.features), len(self.car.features))
 
-        self.car.features.append(u'Yet again another')
+        self.car.features.append('Yet again another')
         self.car.save()
 
         car = objects.Car(id=self.car._id)
@@ -673,7 +670,7 @@ class Widget(unittest.TestCase):
     def test_render(self):
         anne = objects.Female()
         anne.name = "Anne"
-        print anne._get("name").render()
+        print(anne._get("name").render())
 
     def test_multiple_select(self):
         anne = objects.Female()
@@ -683,7 +680,7 @@ class Widget(unittest.TestCase):
         def yo(obj):
             for i in obj:
                 return {"value":i.title, "display":i.employer}
-        print widget.MultipleSelect(object=anne.jobs, item_render=yo).render()
+        print(widget.MultipleSelect(object=anne.jobs, item_render=yo).render())
 
     def test_input_render(self):
         text = widget.Input(object=self.car._get("make"), name="make").render(cls="red checked")
@@ -703,12 +700,12 @@ class Widget(unittest.TestCase):
     def test_checkbox(self):
         obj = objects.BadHuman()
         text = widget.CheckBox(object=obj._get("active")).render()
-        print text
+        print(text)
         with self.assertRaises(Exception) as cm:
             correct = text.index("CHECKED")
         obj.active = True
         checked = widget.CheckBox(object=obj._get("active")).render()
-        print checked
+        print(checked)
         correct = checked.index("CHECKED")
         self.assertGreater(correct, -1)
 
@@ -738,5 +735,5 @@ class Form(unittest.TestCase):
     def test_iterator(self):
         form = objects.PersonForm(obj=self.obj, data=self.submit)
         for f in form:
-            print f.label_tag()
-            print f.render(cls="popup")
+            print(f.label_tag())
+            print(f.render(cls="popup"))

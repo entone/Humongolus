@@ -42,7 +42,7 @@ class Human(orm.Document):
 Human.__remove__()
 
 start = time.time()
-for i in xrange(100):
+for i in range(100):
 	human = {
 		"name":"Chris",
 		"age": 31,
@@ -53,12 +53,12 @@ for i in xrange(100):
 	}
 	conn['test']['humans'].insert(human, safe=True)
 bare = time.time()-start
-print bare
+print(bare)
 
 Human.__remove__()
 
 orm_start = time.time()
-for c in xrange(100):
+for c in range(100):
 	human = Human()
 	human.name = "Chris"
 	human.age = 31
@@ -67,18 +67,18 @@ for c in xrange(100):
 	human.genitalia = "outy"
 	human.save()
 orm_time = time.time()-orm_start
-print orm_time
+print(orm_time)
 
 bare_get = time.time()
 for c in conn["test"]["humans"].find():
-	print "BARE: %s" % c.get("name", None)
+	print("BARE: %s" % c.get("name", None))
 bare_finish = time.time()-bare_get
-print bare_finish
+print(bare_finish)
 
-print "NEXT"
+print("NEXT")
 
 orm_get = time.time()
 for c in Human.find():
-	print "ORM: %s" % c.name
+	print("ORM: %s" % c.name)
 orm_finish = time.time()-orm_get
-print orm_finish
+print(orm_finish)
