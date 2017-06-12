@@ -16,8 +16,8 @@
 Humongolus is a Persistence and Widget Framework for MongoDB written in Python
 """
 
-import settings as _settings
-import mongo
+from . import settings as _settings
+from . import mongo
 import datetime
 import pymongo
 from bson.objectid import ObjectId
@@ -130,11 +130,11 @@ class Attributes(object):
     def __init__(self, **kwargs):
         self._name = kwargs.pop("name", None)
         self._id = kwargs.pop("id", None)
-        for k,v in kwargs.iteritems():
+        for k,v in kwargs.items():
             try:
                 setattr(self, k, v)
             except Exception as e:
-                print e
+                print(e)
 
     @property
     def name(self):
@@ -171,7 +171,7 @@ class Widget(object):
         kwargs['prepend'] = self._prepend if self._prepend and not 'prepend' in kwargs else kwargs.pop('prepend', None)
         self.attributes = Attributes(**kwargs)
 
-        for k,v in self.__class__._getfields().iteritems():
+        for k,v in self.__class__._getfields().items():
             v.__kwargs__['prepend'] = self.attributes.prepend
             v.__kwargs__['name'] = k
             try:
@@ -183,7 +183,7 @@ class Widget(object):
     @classmethod
     def _getfields(cls):
         fields = {}
-        for k,v in cls.__dict__.iteritems():
+        for k,v in cls.__dict__.items():
             if isinstance(v, Widget): fields[k]=v
 
         for i in cls.__bases__:
@@ -252,7 +252,7 @@ class Field(object):
         self._conn = _settings.DB_CONNECTION
         self.__kwargs__ = kwargs
         self.__args__ = args
-        for k,v in kwargs.iteritems():
+        for k,v in kwargs.items():
             try:
                 setattr(self, "_"+k, v)
             except: pass
@@ -339,7 +339,7 @@ class Field(object):
         return str(self._value)
 
     def __unicode__(self):
-        return unicode(self._value)
+        return str(self._value)
 
 class Lazy(object):
     """Object for describing a "foreign key" relationship across Models"""
@@ -366,7 +366,7 @@ class Lazy(object):
         self.__args__ = args
         self.__kwargs__ = kwargs
         self._query = {}
-        for k,v in kwargs.iteritems():
+        for k,v in kwargs.items():
             try:
                 setattr(self, "_"+k, v)
             except: pass
@@ -396,7 +396,7 @@ class Lazy(object):
         return str(self.__class__.__name__)
 
     def __unicode__(self):
-        return unicode(self.__class__.__name__)
+        return str(self.__class__.__name__)
 
 class List(list):
     """Used to describe an array in a :class: `~Document` or :class: `~EmbeddedDocument`. Extends list."""
@@ -424,7 +424,7 @@ class List(list):
         self.__kwargs__ = kwargs
         self.__args__ = args
         self._inited = False
-        for k,v in kwargs.iteritems():
+        for k,v in kwargs.items():
             try:
                 setattr(self, "_"+k, v)
             except: pass
@@ -500,7 +500,7 @@ class List(list):
         return str(self.__class__.__name__)
 
     def __unicode__(self):
-        return unicode(self.__class__.__name__)
+        return str(self.__class__.__name__)
 
 class base(dict):
     logger = None
@@ -522,10 +522,10 @@ class base(dict):
             cls._fields = {}
             cls.__keys__ = set()
             for c in reversed(cls._bases):
-                for k,v in c.__dict__.iteritems():
+                for k,v in c.__dict__.items():
                     if isinstance(v, (base, Field, List, Lazy)):
                         key = v._dbkey if v._dbkey else k
-                        if not isinstance(v, Lazy): cls.__keys__.add(unicode(key))
+                        if not isinstance(v, Lazy): cls.__keys__.add(str(key))
                         v._name = k
                         cls._fields[k] = v
 
@@ -538,14 +538,14 @@ class base(dict):
         self._inited = False
         b = kwargs.get("base", None)
         self._base = b if b != self else None
-        for k,v in self._fields.iteritems():
+        for k,v in self._fields.items():
             v.__kwargs__["base"] = b
             v.__kwargs__['name'] = k
             v.__kwargs__['parent'] = self
             v._name = k
             self.__dict__[k] = v.__class__(*v.__args__, **v.__kwargs__)
 
-    def __nonzero__(self):
+    def __bool__(self):
         return True
 
     @classmethod
@@ -567,7 +567,7 @@ class base(dict):
 
     def _save(self, namespace=None):
         obj = {}
-        for k,v in self.__dict__.iteritems():
+        for k,v in self.__dict__.items():
             try:
                 key = v._dbkey if v._dbkey else k
                 ns = ".".join([namespace, key]) if namespace else key
@@ -577,7 +577,7 @@ class base(dict):
 
     def _errors(self, namespace=None):
         errors = {}
-        for k,v in self.__dict__.iteritems():
+        for k,v in self.__dict__.items():
             try:
                 key = v._dbkey if v._dbkey else k
                 ns = ".".join([namespace, key]) if namespace else key
@@ -587,7 +587,7 @@ class base(dict):
 
     def _map(self, vals, init=False, doc=None):
         self._inited = True
-        for k,v in self.__dict__.iteritems():
+        for k,v in self.__dict__.items():
             try:
                 key = v._dbkey if v._dbkey else k
                 val = vals[key]
@@ -596,7 +596,7 @@ class base(dict):
 
     def _json(self):
         obj = {}
-        for k,v in self.__dict__.iteritems():
+        for k,v in self.__dict__.items():
             try:
                 if not isinstance(v, Lazy):
                     key = v._dbkey if v._dbkey else k
@@ -614,7 +614,7 @@ class base(dict):
         return str(self.__class__.__name__)
 
     def __unicode__(self):
-        return unicode(self.__class__.__name__)
+        return str(self.__class__.__name__)
 
 class EmbeddedDocument(base):
     """Base class for all emdedded documents
@@ -785,7 +785,7 @@ class Document(base):
 
         """
         errors = self._errors()
-        if len(errors.keys()):
+        if len(list(errors.keys())):
             self.logger.error(errors)
             raise DocumentException(errors)
         if not self._id:
@@ -822,7 +822,7 @@ class Index(object):
 
     def __init__(self, name, **kwargs):
         self._name = name
-        for k,v in kwargs.iteritems():
+        for k,v in kwargs.items():
             if hasattr(self, "_%s" % k): setattr(self, "_%s" % k, v)
 
     def create(self, conn):

@@ -53,7 +53,7 @@ class Car(orm.Document):
     make = field.Char()
     model = field.Char()
     year = field.Date()
-    features = orm.List(type=unicode)
+    features = orm.List(type=str)
     properties = orm.List(type=Property)
 
 
@@ -84,8 +84,8 @@ class Rodeo(Car):
 class StateValidator(orm.FieldValidator):
 
     def validate(self, val, doc=None):
-        print "Test!"
-        print self.obj._base.__class__.__name__
+        print("Test!")
+        print(self.obj._base.__class__.__name__)
         if val and not self.obj._parent.country is "USA": raise field.FieldException("Country must be USA to have a state")
         return val
 

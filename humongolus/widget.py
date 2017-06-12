@@ -1,10 +1,12 @@
+from collections import OrderedDict
 import copy
+
 from humongolus import Widget, Field, Document, EmbeddedDocument, Lazy, List, DocumentException, EMPTY
 
 def escape(s):
     orig = copy.copy(s)
     try:
-        s = unicode(s)
+        s = str(s)
         return s.replace('&', '&amp;').replace('<', '&lt;').replace('>', '&gt;').replace('"', '&quot;').replace("'", '&#39;')
     except: return orig
 
@@ -27,7 +29,7 @@ class HTMLElement(Widget):
                 if isinstance(a, list): parts.extend(a)
                 else: parts.append(a)
             except Exception as e:
-                print e
+                print(e)
                 pass
         
         return parts
@@ -41,13 +43,13 @@ class HTMLElement(Widget):
     def compile_tag(self, obj, close=True):
         atts = ["<%s" % obj.pop("tag", "input")]
         obj.update(obj.pop("extra", {}))
-        for k,v in obj.iteritems():
+        for k,v in obj.items():
             if v in EMPTY: continue
             v = v if isinstance(v, list) else [v]
-            atts.append(u"%s='%s'" % (k, u" ".join([escape(val) for val in v])))
+            atts.append("%s='%s'" % (k, " ".join([escape(val) for val in v])))
         
         atts.append("/>" if close else ">")
-        return u" ".join(atts)
+        return " ".join(atts)
 
     def __iter__(self):
         for fi in self._fields:
@@ -65,15 +67,15 @@ class Input(HTMLElement):
         self.attributes.cls = kwargs.get("cls", self.attributes.cls)
         self.attributes.label = kwargs.get("label", self.attributes.label)
         self.attributes.extra = kwargs.get("extra", self.attributes.extra)
-        obj = {
-            "tag":self._tag,
-            "type":self._type,
-            "id":self.attributes.id,
-            "name":self.attributes.name,
-            "value":self.attributes.value,
-            "class":self.attributes.cls,
-            "extra":self.attributes.extra
-        }
+        obj = OrderedDict([
+            ("tag", self._tag),
+            ("name", self.attributes.name),
+            ("value", self.attributes.value),
+            ("id", self.attributes.id),
+            ("type", self._type),
+            ("class", self.attributes.cls),
+            ("extra", self.attributes.extra),
+        ])
         return self.compile_tag(obj)
 
 class Password(Input):
@@ -92,13 +94,13 @@ class Select(Input):
 
     def render(self, *args, **kwargs):
         val = super(Select, self).render(*args, **kwargs)
-        obj = {
-            "tag":"select",
-            "id":self.attributes.id,
-            "name":self.attributes.name,
-            "class":self.attributes.cls,
-            "extra":self.attributes.extra
-        }
+        obj = OrderedDict([
+            ("tag", "select"),
+            ("class", self.attributes.cls),
+            ("id", self.attributes.id),
+            ("name", self.attributes.name),
+            ("extra", self.attributes.extra),
+        ])
         st = self.compile_tag(obj, close=False)
         ch = []
         for i in self.object.get_choices(render=self.attributes.item_render):
@@ -193,7 +195,7 @@ class Form(HTMLElement):
 
     def parse_data(self, data):
         obj = {}
-        for k,v in data.iteritems():
+        for k,v in data.items():
             key = k[len(self._prepend)+1:] if self._prepend else k
             parts = key.split('-')
             branch = obj
@@ -207,11 +209,11 @@ class Form(HTMLElement):
     def validate(self):
         if self._data: 
             obj = self.parse_data(self._data)
-            print obj
+            print(obj)
             self.object._map(obj)
             errors = self.object._errors()
-            if len(errors.keys()):
-                for k,v in errors.iteritems():
+            if len(list(errors.keys())):
+                for k,v in errors.items():
                     try:
                         self.__dict__[k].errors.append(v)
                     except: pass

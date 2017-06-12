@@ -1,4 +1,4 @@
-import test_field
+from . import test_field
 import unittest
 
 def suite():
